@@ -39,7 +39,7 @@ md`Figure 1: Automated Asset Manager (AAM) Transaction Flow`
 )}
 
 function _3(md){return(
-md`![Automated Asset Manager (AAM) Transaction Flow]()`
+md`![Automated Asset Manager (AAM) Transaction Flow](files/aam_flow.png)`
 )}
 
 function _4(md){return(
