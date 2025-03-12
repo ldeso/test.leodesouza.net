@@ -1,0 +1,30 @@
+@import url("observablehq:default.css");
+@import url("observablehq:theme-air.css");
+
+.Copyright {
+  border: solid 1px;
+}
+
+.Copyright-row {
+  border: none !important;
+}
+
+.Copyright-cell {
+  padding: 3px 6.5px;
+}
+
+.u-blue {
+  color: blue;
+}
+
+.u-red {
+  color: red;
+}
+
+.u-center {
+  text-align: center;
+}
+
+.u-underline {
+  text-decoration: underline;
+}
