@@ -272,34 +272,36 @@ ${tex`t \in \{ 1, 2, \dots, 40 \}.`}
 - ${tex`E_t`}: Time to expiry expressed in years.
 
 ```js
-function linearStakes(E, S, D_input, C_input) {
-  if (E.length === 1) {
-    return [S];
+function linearStakes(vecE, paramS, inputD, inputC) {
+  if (vecE.length === 1) {
+    return [paramS];
   }
 
   let t1 = 0;
-  let t2 = E.length - 1;
-  let slope = 0.002 * Math.atanh(D_input);
-  let intercept = S / E.length;
+  let t2 = vecE.length - 1;
+  let scaleD = d3.scaleLinear(d3.extent(vecE), [-1, 1])
+  let slope = 0.002 * Math.atanh(scaleD(inputD));
+  let intercept = paramS / vecE.length;
 
   if (Math.abs(slope) > 2 * intercept / (t2 - t1 - 1)) {
-    const t_shift = Math.max(1, Math.round(Math.sqrt(Math.abs(2 * S / slope))));
+    const tExactShift = Math.sqrt(Math.abs(2 * paramS / slope));
+    const tShift = Math.max(1, Math.round(tExactShift));
     if (slope > 0) {
-      t1 = t2 - t_shift;
+      t1 = t2 - tShift;
     } else {
-      t2 = t1 + t_shift;
+      t2 = t1 + tShift;
     }
-    slope = Math.sign(slope) * 2 * S / Math.pow((t2 - t1), 2);
+    slope = Math.sign(slope) * 2 * paramS / Math.pow((t2 - t1), 2);
     intercept = Math.abs(slope) * (t2 - t1 - 1) / 2;
   }
 
-  const S_vec = [];
-  for (let i = 0; i < E.length; i++) {
+  const vecS = [];
+  for (let i = 0; i < vecE.length; i++) {
     const t = i - (t1 + t2) / 2;
-    S_vec.push(Math.max(0, slope * t + intercept));
+    vecS.push(Math.max(0, slope * t + intercept));
   }
 
-  return S_vec;
+  return vecS;
 }
 ```
 
@@ -307,6 +309,8 @@ function linearStakes(E, S, D_input, C_input) {
 const vecE = d3.range(0.25, 10.1, 0.25);
 
 const vecS = linearStakes(vecE, inputS, inputD, inputC);
+
+const vecReverseCumS = d3.cumsum(vecS.slice().reverse()).reverse()
 ```
 
 Calculating curve parameters ${tex`D`}, ${tex`C`}:
@@ -449,40 +453,123 @@ R = \sum_{t=1}^{40} \Delta A_t \tag{10}
 
 <p class="u-center">Figure 6: Example of Bond Market State
 
-![Example of Bond Market State](toy-model/bond_market.png)
-
 ```js
-const partialVecE = [];
-const partialVecS = [];
-const partialVecZ = [];
-const partialVecB = [];
-const realYield = [];
+const yieldData = [];
 for (let t = 3; t < vecE.length; t += 4) {
-  partialVecE.push(vecE[t]);
-  partialVecS.push(d3.sum(vecS.slice(t - 3, t + 1)));
-  partialVecZ.push(vecZ[t]);
-  partialVecB.push(vecB[t]);
-  realYield.push(vecZ[t] - inputI);
+  yieldData.push({
+    key: "Stake A",
+    value: 100 * d3.sum(vecS.slice(t - 3, t + 1)),
+    time: vecE[t],
+  })
+  yieldData.push({
+    key: "Yield Term Structure",
+    value: 100 * vecZ[t],
+    time: vecE[t],
+  })
+  yieldData.push({
+    key: "Real Yield",
+    value: 100 * (vecZ[t] - inputI),
+    time: vecE[t],
+  })
+  yieldData.push({
+    key: "Discount Curve",
+    value: 100 * vecB[t],
+    time: vecE[t],
+  })
+  yieldData.push({
+    key: "Cumulative Stake A",
+    value: 100 * vecReverseCumS[t - 3],
+    time: vecE[t],
+  })
 }
-const cumStake = d3.cumsum(partialVecS.slice().reverse()).reverse();
+const getStake = d => d.key === "Stake A" ? d.value : NaN;
+const getYieldTerm = d => d.key === "Yield Term Structure" ? d.value : NaN;
+const getRealYield = d => d.key === "Real Yield" ? d.value : NaN;
+const getDiscount = d => d.key === "Discount Curve" ? d.value : NaN;
+const getCumStake = d => d.key === "Cumulative Stake A" ? d.value : NaN;
+
+const yieldDomain = [0, 2.042489344154689 * d3.max(yieldData, getYieldTerm)];
+const stakeRange = [0, d3.max(yieldData, getStake)];
+const yieldScale = d3.scaleLinear(yieldDomain, stakeRange);
+const mapYieldScale = x => x.map(yieldScale);
+
+const stringS = `Total Stake = ${inputS.toLocaleString(
+  undefined,
+  { style: "percent", minimumFractionDigits: 2 },
+)}`;
+const stringI = `Inflation = ${inputI.toLocaleString(
+  undefined,
+  { style: "percent", minimumFractionDigits: 2 },
+)}`;
+const stringD = `D = ${paramD.toLocaleString(undefined)} years`
+const stringC = `√C = ${Math.sqrt(paramC).toLocaleString(undefined)} years`
+
+const yieldParams = [
+  { key: stringD, time: paramD },
+  { key: stringC, time: Math.sqrt(paramC) },
+]
 ```
 
 ```js
 Plot.plot({
   title: "Yield",
+  subtitle: `(${stringS}, ${stringI})`,
+  color: {
+    legend: true,
+    range: d3.schemeCategory10,
+    domain: ["Stake A", "Yield Term Structure", "Real Yield", stringD, stringC],
+  },
+  x: {
+    ticks: d3.range(1, 11),
+    domain: [0.25, 10.45],
+    label: "Time to Expiry (Years)",
+  },
+  y: { domain: stakeRange, grid: true },
+  insetTop: 16,
+  insetLeft: 8,
+  insetRight: 8,
   clip: true,
-  color: { scheme: "Observable10" },
-  x: { label: "Time to Expiry (Years)" },
-  y: { domain: [0, 105 * d3.max(partialVecS)], grid: true, percent: true },
   marks: [
     Plot.frame(),
     Plot.axisY({ anchor: "left", label: "Stake A by Maturity (%)" }),
-    Plot.axisY({ anchor: "right", label: "Rates (%)" }),
-    Plot.barY(partialVecS, { x: partialVecE, fill: 1 }),
-    Plot.lineY(partialVecZ, { x: partialVecE, stroke: 2 }),
-    Plot.dotY(partialVecZ, { x: partialVecE, fill: 2 }),
-    Plot.lineY(realYield, { x: partialVecE, stroke: 3 }),
-    Plot.dotY(realYield, { x: partialVecE, fill: 3 }),
+    Plot.axisY(
+      yieldScale.ticks(),
+      { 
+        anchor: "right",
+        label: "Yield Rates (%)",
+        y: yieldScale,
+        tickFormat: yieldScale.tickFormat(),
+      },
+    ),
+    Plot.rectY(
+      yieldData,
+      {
+        x1: d => d.time - 0.45,
+        x2: d => d.time + 0.45,
+        y: getStake,
+        fill: "key",
+      },
+    ),
+    Plot.ruleX(
+      yieldParams,
+      { x: "time", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
+    ),
+    Plot.lineY(
+      yieldData,
+      Plot.mapY(mapYieldScale, { x: "time", y: getYieldTerm, stroke: "key" }),
+    ),
+    Plot.dotY(
+      yieldData,
+      Plot.mapY(mapYieldScale, { x: "time", y: getYieldTerm, fill: "key" }),
+    ),
+    Plot.lineY(
+      yieldData,
+      Plot.mapY(mapYieldScale, { x: "time", y: getRealYield, stroke: "key" }),
+    ),
+    Plot.dotY(
+      yieldData,
+      Plot.mapY(mapYieldScale, { x: "time", y: getRealYield, fill: "key" }),
+    ),
   ],
 })
 ```
@@ -494,10 +581,10 @@ const inputS = view(Inputs.range([1e-4, 1], {
   value: 0.55,
 }));
 
-const inputD = view(Inputs.range([-1, 1], {
-  label: tex`D \text{ (arbitr. unit)}`,
+const inputD = view(Inputs.range([0.25, 10], {
+  label: tex`\text{Approximate } D`,
   step: 0.01,
-  value: -0.3,
+  value: 3.64,
 }));
 
 // const inputC = view(Inputs.range([-1, 1], {
@@ -516,17 +603,40 @@ const inputI = view(Inputs.range([0, 0.1], {
 ```js
 Plot.plot({
   title: "Discount Rate",
+  color: {
+    legend: true,
+    range: [8, 5, 3, 4].map(i => d3.schemeCategory10[i]),
+    domain: ["Cumulative Stake A", "Discount Curve", stringD, stringC],
+  },
+  x: {
+    ticks: d3.range(1, 11),
+    domain: [0.25, 10.45],
+    label: "Time to Expiry (Years)",
+  },
+  y: { domain: [0, 100], grid: true },
   clip: true,
-  color: { scheme: "Dark2" },
-  x: { label: "Time to Expiry (Years)" },
-  y: { domain: [0, 105], grid: true, percent: true },
+  insetTop: 16,
+  insetLeft: 8,
+  insetRight: 8,
   marks: [
     Plot.frame(),
-    Plot.axisY({ anchor: "left", label: "Cumulative Stake A (%)" }),
+    Plot.axisY({ anchor: "left", label: "Cumulative Stake (%)" }),
     Plot.axisY({ anchor: "right", label: "Discount (%)" }),
-    Plot.barY(cumStake, { x: partialVecE, fill: 1 }),
-    Plot.lineY(partialVecB, { x: partialVecE, stroke: 2 }),
-    Plot.dotY(partialVecB, { x: partialVecE, fill: 2 }),
+    Plot.rectY(
+      yieldData,
+      {
+        x1: d => d.time - 0.45,
+        x2: d => d.time + 0.45,
+        y: getCumStake,
+        fill: "key",
+      },
+    ),
+    Plot.ruleX(
+      yieldParams,
+      { x: "time", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
+    ),
+    Plot.lineY(yieldData, { x: "time", y: getDiscount, stroke: "key" }),
+    Plot.dotY(yieldData, { x: "time", y: getDiscount, fill: "key" }),
   ],
 })
 ```
