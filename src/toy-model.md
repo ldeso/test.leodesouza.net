@@ -399,24 +399,6 @@ Plot.plot({
 ```
 
 ```js
-Plot.plot({
-  title: "Discount Rate",
-  clip: true,
-  color: { scheme: "Dark2" },
-  x: { label: "Time to Expiry (Years)" },
-  y: { domain: [0, 105], grid: true, percent: true },
-  marks: [
-    Plot.frame(),
-    Plot.axisY({ anchor: "left", label: "Cumulative Stake A (%)" }),
-    Plot.axisY({ anchor: "right", label: "Discount (%)" }),
-    Plot.barY(cumStake, { x: partialVecE, fill: 1 }),
-    Plot.lineY(partialVecB, { x: partialVecE, stroke: 2 }),
-    Plot.dotY(partialVecB, { x: partialVecE, fill: 2 }),
-  ],
-})
-```
-
-```js
 const inputS = view(Inputs.range([1e-4, 1], {
   label: tex`\text{Total stake } S \text{ (\%)}`,
   step: 1e-4,
@@ -442,6 +424,24 @@ const inputI = view(Inputs.range([0, 0.1], {
   value: 0.0202,
   format: x => (100 * x).toFixed(2),
 }));
+```
+
+```js
+Plot.plot({
+  title: "Discount Rate",
+  clip: true,
+  color: { scheme: "Dark2" },
+  x: { label: "Time to Expiry (Years)" },
+  y: { domain: [0, 105], grid: true, percent: true },
+  marks: [
+    Plot.frame(),
+    Plot.axisY({ anchor: "left", label: "Cumulative Stake A (%)" }),
+    Plot.axisY({ anchor: "right", label: "Discount (%)" }),
+    Plot.barY(cumStake, { x: partialVecE, fill: 1 }),
+    Plot.lineY(partialVecB, { x: partialVecE, stroke: 2 }),
+    Plot.dotY(partialVecB, { x: partialVecE, fill: 2 }),
+  ],
+})
 ```
 
 See Appendix A for further outputs.
