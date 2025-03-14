@@ -740,19 +740,19 @@ const paramBarCi = inputCi0 + dotProduct(vecB, vecCi);
 ```
 
 ```js
-const heldCarbonData = [];
-heldCarbonData.push({
+const carbonHeldData = [];
+carbonHeldData.push({
   key: "Liquidity Schedule",
   value: 100 * inputCi0,
   time: 0,
 });
 for (let t = 3; t < vecE.length; t += 4) {
-  heldCarbonData.push({
+  carbonHeldData.push({
     key: "Liquidity Schedule",
     value: 100 * d3.sum(vecCi.slice(t - 3, t + 1)),
     time: vecE[t],
   });
-  heldCarbonData.push({
+  carbonHeldData.push({
     key: "Discount Curve",
     value: 100 * vecB[t],
     time: vecE[t],
@@ -784,13 +784,13 @@ Plot.plot({
     Plot.frame(),
     Plot.axisY({ anchor: "left", label: "Quantity of Carbon (%)" }),
     Plot.axisY({ anchor: "right", label: "Discount (%)" }),
-    Plot.rectY(heldCarbonData, { x: "time", y: getLiqSchedule, fill: "key" }),
+    Plot.rectY(carbonHeldData, { x: "time", y: getLiqSchedule, fill: "key" }),
     Plot.ruleY(
       heldCarbonParam,
       { y: "value", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
     ),
-    Plot.lineY(heldCarbonData, { x: "time", y: getDiscount, stroke: "key" }),
-    Plot.dotY(heldCarbonData, { x: "time", y: getDiscount, fill: "key" }),
+    Plot.lineY(carbonHeldData, { x: "time", y: getDiscount, stroke: "key" }),
+    Plot.dotY(carbonHeldData, { x: "time", y: getDiscount, fill: "key" }),
   ],
 })
 ```
@@ -839,19 +839,19 @@ Once standardised by the discount curve, trades can be agglomerated in the same
 class for the defined trade or auction period.
 
 ```js
-const boughtCarbonData = [];
-boughtCarbonData.push({
+const carbonBuyData = [];
+carbonBuyData.push({
   key: "Carbon Bought",
   value: 100 * paramDeltaCi0,
   time: 0,
 });
 for (let t = 3; t < vecE.length; t += 4) {
-  boughtCarbonData.push({
+  carbonBuyData.push({
     key: "Carbon Bought",
     value: 100 * d3.sum(vecDeltaCi.slice(t - 3, t + 1)),
     time: vecE[t],
   });
-  boughtCarbonData.push({
+  carbonBuyData.push({
     key: "Discount Curve",
     value: 100 * vecB[t],
     time: vecE[t],
@@ -859,10 +859,11 @@ for (let t = 3; t < vecE.length; t += 4) {
 }
 const getCarbonBought = d => d.key === "Carbon Bought" ? d.value : NaN;
 
-const stringDeltaBarCi = `Present-Value Carbon Bought ΔC̄ᵢ = ${paramDeltaBarCi.toLocaleString(
-  undefined,
-  { style: "percent", minimumFractionDigits: 2 },
-)}`;
+const stringDeltaBarCi = `Present-Value Bought Carbon` +
+        `ΔC̄ᵢ = ${paramDeltaBarCi.toLocaleString(
+          undefined,
+          { style: "percent", minimumFractionDigits: 2 },
+        )}`;
 const boughtCarbonParam = [
   { key: stringDeltaBarCi, value: 100 * paramDeltaBarCi },
 ];
@@ -877,25 +878,27 @@ Plot.plot({
     domain: ["Carbon Bought", "Discount Curve", stringDeltaBarCi],
   },
   x: { label: "Time to Expiry (Years)" },
-  y: { domain: [0, 100], grid: true, label: "Quantity of Carbon (%)" },
+  y: { domain: [0, 100], grid: true },
   insetTop: 16,
   clip: true,
   marks: [
     Plot.frame(),
-    Plot.rectY(boughtCarbonData, { x: "time", y: getCarbonBought, fill: "key" }),
+    Plot.axisY({ anchor: "left", label: "Quantity of Carbon (%)" }),
+    Plot.axisY({ anchor: "right", label: "Discount (%)" }),
+    Plot.rectY(carbonBuyData, { x: "time", y: getCarbonBought, fill: "key" }),
     Plot.ruleY(
       boughtCarbonParam,
       { y: "value", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
     ),
-    Plot.lineY(boughtCarbonData, { x: "time", y: getDiscount, stroke: "key" }),
-    Plot.dotY(boughtCarbonData, { x: "time", y: getDiscount, fill: "key" }),
+    Plot.lineY(carbonBuyData, { x: "time", y: getDiscount, stroke: "key" }),
+    Plot.dotY(carbonBuyData, { x: "time", y: getDiscount, fill: "key" }),
   ],
 })
 ```
 
 ```js
 const inputDeltaCi = view(Inputs.range([0, 1], {
-  label: tex`\Delta C_i \text{ (carbon bought from class } i \text) `,
+  label: tex`\Delta C_i \text{ (carbon bought from class } i \text)`,
   step: 1e-3,
   value: 1,
 }));
