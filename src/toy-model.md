@@ -494,16 +494,16 @@ const stakeRange = [0, d3.max(yieldData, getStake)];
 const yieldScale = d3.scaleLinear(yieldDomain, stakeRange);
 const mapYieldScale = x => x.map(yieldScale);
 
-const stringS = `Total Stake = ${inputS.toLocaleString(
-  undefined,
+const stringS = "Total Stake = " + inputS.toLocaleString(
+  "en-US",
   { style: "percent", minimumFractionDigits: 2 },
-)}`;
-const stringI = `Inflation = ${inputI.toLocaleString(
-  undefined,
+);
+const stringI = "Inflation = " + inputI.toLocaleString(
+  "en-US",
   { style: "percent", minimumFractionDigits: 2 },
-)}`;
-const stringD = `D = ${paramD.toLocaleString(undefined)} years`;
-const stringC = `√C = ${Math.sqrt(paramC).toLocaleString(undefined)} years`;
+);
+const stringD = `D = ${paramD.toLocaleString("en-US")} years`;
+const stringC = `√C = ${Math.sqrt(paramC).toLocaleString("en-US")} years`;
 
 const yieldParams = [
   { key: stringD, time: paramD },
@@ -761,7 +761,7 @@ for (let t = 3; t < vecE.length; t += 4) {
 const getLiqSchedule = d => d.key === "Liquidity Schedule" ? d.value : NaN;
 
 const stringBarCi = `Present-Value Carbon C̄ᵢ = ${paramBarCi.toLocaleString(
-  undefined,
+  "en-US",
   { style: "percent", minimumFractionDigits: 2 },
 )}`;
 
@@ -859,11 +859,11 @@ for (let t = 3; t < vecE.length; t += 4) {
 }
 const getCarbonBought = d => d.key === "Carbon Bought" ? d.value : NaN;
 
-const stringDeltaBarCi = `Present-Value Bought Carbon` +
-        `ΔC̄ᵢ = ${paramDeltaBarCi.toLocaleString(
-          undefined,
+const stringDeltaBarCi = "Present-Value Bought Carbon ΔC̄ᵢ = " +
+        paramDeltaBarCi.toLocaleString(
+          "en-US",
           { style: "percent", minimumFractionDigits: 2 },
-        )}`;
+        );
 const boughtCarbonParam = [
   { key: stringDeltaBarCi, value: 100 * paramDeltaBarCi },
 ];
