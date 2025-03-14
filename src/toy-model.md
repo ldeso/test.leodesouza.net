@@ -272,45 +272,46 @@ ${tex`t \in \{ 1, 2, \dots, 40 \}.`}
 - ${tex`E_t`}: Time to expiry expressed in years.
 
 ```js
-function linearStakes(vecE, paramS, inputD, inputC) {
-  if (vecE.length === 1) {
-    return [paramS];
+function constAreaLinear(range, area, inputSlope, slopeFactor = 0.002) {
+  if (range.length === 1) {
+    return [area];
   }
 
-  let t1 = 0;
-  let t2 = vecE.length - 1;
-  let scaleD = d3.scaleLinear(d3.extent(vecE), [-1, 1])
-  let slope = 0.002 * Math.atanh(scaleD(inputD));
-  let intercept = paramS / vecE.length;
+  let y1 = 0;
+  let y2 = range.length - 1;
+  let slope = slopeFactor * Math.atanh(inputSlope);
+  let intercept = area / range.length;
 
-  if (Math.abs(slope) > 2 * intercept / (t2 - t1 - 1)) {
-    const tExactShift = Math.sqrt(Math.abs(2 * paramS / slope));
-    const tShift = Math.max(1, Math.round(tExactShift));
+  if (Math.abs(slope) > 2 * intercept / (y2 - y1 - 1)) {
+    const yExactShift = Math.sqrt(Math.abs(2 * area / slope));
+    const yRoundShift = Math.max(1, Math.round(yExactShift));
     if (slope > 0) {
-      t1 = t2 - tShift;
+      y1 = y2 - yRoundShift;
     } else {
-      t2 = t1 + tShift;
+      y2 = y1 + yRoundShift;
     }
-    slope = Math.sign(slope) * 2 * paramS / Math.pow((t2 - t1), 2);
-    intercept = Math.abs(slope) * (t2 - t1 - 1) / 2;
+    slope = Math.sign(slope) * 2 * area / Math.pow((y2 - y1), 2);
+    intercept = Math.abs(slope) * (y2 - y1 - 1) / 2;
   }
 
-  const vecS = [];
-  for (let i = 0; i < vecE.length; i++) {
-    const t = i - (t1 + t2) / 2;
-    vecS.push(Math.max(0, slope * t + intercept));
+  const yConstArea = [];
+  for (let i = 0; i < range.length; i++) {
+    const y = i - (y1 + y2) / 2;
+    yConstArea.push(Math.max(0, slope * y + intercept));
   }
 
-  return vecS;
+  return yConstArea;
 }
 ```
 
 ```js
 const vecE = d3.range(0.25, 10.1, 0.25);
 
-const vecS = linearStakes(vecE, inputS, inputD, inputC);
+const scaleE = d3.scaleLinear(d3.extent(vecE), [-1, 1]);
 
-const vecReverseCumS = d3.cumsum(vecS.slice().reverse()).reverse()
+const vecS = constAreaLinear(vecE, inputS, scaleE(inputD));
+
+const vecReverseCumsumS = d3.cumsum(vecS.slice().reverse()).reverse();
 ```
 
 Calculating curve parameters ${tex`D`}, ${tex`C`}:
@@ -460,27 +461,27 @@ for (let t = 3; t < vecE.length; t += 4) {
     key: "Stake A",
     value: 100 * d3.sum(vecS.slice(t - 3, t + 1)),
     time: vecE[t],
-  })
+  });
   yieldData.push({
     key: "Yield Term Structure",
     value: 100 * vecZ[t],
     time: vecE[t],
-  })
+  });
   yieldData.push({
     key: "Real Yield",
     value: 100 * (vecZ[t] - inputI),
     time: vecE[t],
-  })
+  });
   yieldData.push({
     key: "Discount Curve",
     value: 100 * vecB[t],
     time: vecE[t],
-  })
+  });
   yieldData.push({
     key: "Cumulative Stake A",
-    value: 100 * vecReverseCumS[t - 3],
+    value: 100 * vecReverseCumsumS[t - 3],
     time: vecE[t],
-  })
+  });
 }
 const getStake = d => d.key === "Stake A" ? d.value : NaN;
 const getYieldTerm = d => d.key === "Yield Term Structure" ? d.value : NaN;
@@ -501,13 +502,13 @@ const stringI = `Inflation = ${inputI.toLocaleString(
   undefined,
   { style: "percent", minimumFractionDigits: 2 },
 )}`;
-const stringD = `D = ${paramD.toLocaleString(undefined)} years`
-const stringC = `√C = ${Math.sqrt(paramC).toLocaleString(undefined)} years`
+const stringD = `D = ${paramD.toLocaleString(undefined)} years`;
+const stringC = `√C = ${Math.sqrt(paramC).toLocaleString(undefined)} years`;
 
 const yieldParams = [
   { key: stringD, time: paramD },
   { key: stringC, time: Math.sqrt(paramC) },
-]
+];
 ```
 
 ```js
@@ -576,25 +577,17 @@ Plot.plot({
 
 ```js
 const inputS = view(Inputs.range([1e-4, 1], {
-  label: tex`\text{Total stake } S`,
+  label: tex`S \text{ (total stake)}`,
   step: 1e-4,
   value: 0.55,
 }));
-
 const inputD = view(Inputs.range([0.25, 10], {
-  label: tex`\text{Approximate } D`,
+  label: tex`D \text{ (approximately)}`,
   step: 0.01,
   value: 3.64,
 }));
-
-// const inputC = view(Inputs.range([-1, 1], {
-//   label: tex`\text{Parameter } C`,
-//   step: 0.01,
-// }));
-const inputC = null;
-
 const inputI = view(Inputs.range([0, 0.1], {
-  label: tex`\text{Inflation } I`,
+  label: tex`\text{Inflation }`,
   step: 0.0002,
   value: 0.0202,
 }));
@@ -740,6 +733,79 @@ discounted holdings:
 \bar C_i = C_{i0} + \sum_{t=1}^{40} B_t C_{it} \tag{15}
 ```
 
+```js
+const vecCi = constAreaLinear(vecE, 1 - inputCi0, inputLiqShape, 0.01);
+
+const paramBarCi = inputCi0 + dotProduct(vecB, vecCi);
+```
+
+```js
+const heldCarbonData = [];
+heldCarbonData.push({
+  key: "Liquidity Schedule",
+  value: 100 * inputCi0,
+  time: 0,
+});
+for (let t = 3; t < vecE.length; t += 4) {
+  heldCarbonData.push({
+    key: "Liquidity Schedule",
+    value: 100 * d3.sum(vecCi.slice(t - 3, t + 1)),
+    time: vecE[t],
+  });
+  heldCarbonData.push({
+    key: "Discount Curve",
+    value: 100 * vecB[t],
+    time: vecE[t],
+  });
+}
+const getLiqSchedule = d => d.key === "Liquidity Schedule" ? d.value : NaN;
+
+const stringBarCi = `Present-Value Carbon C̄ᵢ = ${paramBarCi.toLocaleString(
+  undefined,
+  { style: "percent", minimumFractionDigits: 2 },
+)}`;
+
+const heldCarbonParam = [{ key: stringBarCi, value: 100 * paramBarCi }];
+```
+
+```js
+Plot.plot({
+  title: "Carbon Held in the AAM",
+  color: {
+    legend: true,
+    range: [2, 5, 6].map(i => d3.schemeCategory10[i]),
+    domain: ["Liquidity Schedule", "Discount Curve", stringBarCi],
+  },
+  x: { label: "Time to Expiry (Years)" },
+  y: { domain: [0, 100], grid: true },
+  insetTop: 16,
+  clip: true,
+  marks: [
+    Plot.frame(),
+    Plot.axisY({ anchor: "left", label: "Quantity of Carbon (%)" }),
+    Plot.axisY({ anchor: "right", label: "Discount (%)" }),
+    Plot.rectY(heldCarbonData, { x: "time", y: getLiqSchedule, fill: "key" }),
+    Plot.ruleY(
+      heldCarbonParam,
+      { y: "value", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
+    ),
+    Plot.lineY(heldCarbonData, { x: "time", y: getDiscount, stroke: "key" }),
+    Plot.dotY(heldCarbonData, { x: "time", y: getDiscount, fill: "key" }),
+  ],
+})
+```
+
+```js
+const inputCi0 = view(Inputs.range([0, 1], {
+  label: tex`C_{i0} \text{ (liquid carbon held for class } i \text)`,
+  step: 1e-3,
+}));
+const inputLiqShape = view(Inputs.range([-1, 1], {
+  label: tex`\text{Shape of the liquidity schedule}`,
+  step: 1e-3,
+}));
+```
+
 Similarly, taking ${tex`\Delta C_{it}`} as the quantity of Carbon ${tex`i`} to
 be sold with a specific maturity index ${tex`t`}.
 
@@ -747,8 +813,98 @@ be sold with a specific maturity index ${tex`t`}.
 \Delta \bar C_i = \Delta C_{i0} + \sum_{t=1}^{40} B_t \, \Delta C_{it} \tag{16}
 ```
 
+```js
+function computeDeltaCi0(inputDeltaCi, t) {
+  return inputMatIdx === 0 ? inputDeltaCi : 0;
+}
+
+function computeDeltaCi(inputDeltaCi, t) {
+  const vecDeltaCi = Array(40).fill(0);
+  if (t !== 0) {
+    vecDeltaCi[t - 1] = inputDeltaCi;
+  }
+  return vecDeltaCi;
+}
+```
+
+```js
+const paramDeltaCi0 = computeDeltaCi0(inputDeltaCi, inputMatIdx);
+
+const vecDeltaCi = computeDeltaCi(inputDeltaCi, inputMatIdx);
+
+const paramDeltaBarCi = paramDeltaCi0 + dotProduct(vecB, vecDeltaCi);
+```
+
 Once standardised by the discount curve, trades can be agglomerated in the same
 class for the defined trade or auction period.
+
+```js
+const boughtCarbonData = [];
+boughtCarbonData.push({
+  key: "Carbon Bought",
+  value: 100 * paramDeltaCi0,
+  time: 0,
+});
+for (let t = 3; t < vecE.length; t += 4) {
+  boughtCarbonData.push({
+    key: "Carbon Bought",
+    value: 100 * d3.sum(vecDeltaCi.slice(t - 3, t + 1)),
+    time: vecE[t],
+  });
+  boughtCarbonData.push({
+    key: "Discount Curve",
+    value: 100 * vecB[t],
+    time: vecE[t],
+  });
+}
+const getCarbonBought = d => d.key === "Carbon Bought" ? d.value : NaN;
+
+const stringDeltaBarCi = `Present-Value Carbon Bought ΔC̄ᵢ = ${paramDeltaBarCi.toLocaleString(
+  undefined,
+  { style: "percent", minimumFractionDigits: 2 },
+)}`;
+const boughtCarbonParam = [
+  { key: stringDeltaBarCi, value: 100 * paramDeltaBarCi },
+];
+```
+
+```js
+Plot.plot({
+  title: "Carbon Bought by the AAM",
+  color: {
+    legend: true,
+    range: [3, 5, 7].map(i => d3.schemeCategory10[i]),
+    domain: ["Carbon Bought", "Discount Curve", stringDeltaBarCi],
+  },
+  x: { label: "Time to Expiry (Years)" },
+  y: { domain: [0, 100], grid: true, label: "Quantity of Carbon (%)" },
+  insetTop: 16,
+  clip: true,
+  marks: [
+    Plot.frame(),
+    Plot.rectY(boughtCarbonData, { x: "time", y: getCarbonBought, fill: "key" }),
+    Plot.ruleY(
+      boughtCarbonParam,
+      { y: "value", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
+    ),
+    Plot.lineY(boughtCarbonData, { x: "time", y: getDiscount, stroke: "key" }),
+    Plot.dotY(boughtCarbonData, { x: "time", y: getDiscount, fill: "key" }),
+  ],
+})
+```
+
+```js
+const inputDeltaCi = view(Inputs.range([0, 1], {
+  label: tex`\Delta C_i \text{ (carbon bought from class } i \text) `,
+  step: 1e-3,
+  value: 1,
+}));
+const inputMatIdx = view(Inputs.range([0, 40], {
+  label: tex`t \text{ (maturity index)}`,
+  step: 1,
+  value: 24,
+}));
+```
 
 Where ${tex`\Delta \bar C_i`} is expressed as the relative increment to its
 respective pool balance, the amount of ${tex`A`} tokens issued to pay for
