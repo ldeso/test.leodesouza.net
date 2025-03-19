@@ -1428,7 +1428,7 @@ for (let i = 0; i < vecC0.length; i++) {
 const getLiquidBalance = d => d.key === "Liquid Carbon Balance" ? d.value : NaN;
 const getGStake = d => d.key === "Stake G" ? d.value : NaN;
 
-const stringGnull = `Implied Stake G: ${paramGnull.toLocaleString(
+const stringGnull = `Implied G Stake: ${paramGnull.toLocaleString(
   "en-GB",
   { style: "percent", maximumFractionDigits: 0 },
 )}`;
@@ -1471,17 +1471,17 @@ Plot.plot({
 ```js
 const inputG1 = view(Inputs.range([0.0, 1/3], {
   label: tex`G_1 \text{ (} G \text{ stake pricing class } 1 \text)`,
-  step: 0.01,
+  step: 0.001,
   value: 0.1,
 }));
 const inputG2 = view(Inputs.range([0.0, 1/3], {
   label: tex`G_2 \text{ (} G \text{ stake pricing class } 2 \text)`,
-  step: 0.01,
+  step: 0.001,
   value: 0.2,
 }));
 const inputG3 = view(Inputs.range([0.0, 1/3], {
   label: tex`G_3 \text{ (} G \text{ stake pricing class } 3 \text)`,
-  step: 0.01,
+  step: 0.001,
   value: 0.3,
 }));
 ```
@@ -1489,17 +1489,17 @@ const inputG3 = view(Inputs.range([0.0, 1/3], {
 ```js
 const inputC1_0 = view(Inputs.range([0, 1/3], {
   label: tex`C_{1 \, 0} \text{ (class } 1 \text{ liquid balance)}`,
-  step: 0.01,
+  step: 0.001,
   value: 0.3,
 }));
 const inputC2_0 = view(Inputs.range([0, 1/3], {
   label: tex`C_{2 \, 0} \text{ (class } 2 \text{ liquid balance)}`,
-  step: 0.01,
+  step: 0.001,
   value: 0.1,
 }));
 const inputC3_0 = view(Inputs.range([0, 1/3], {
   label: tex`C_{3 \, 0} \text{ (class } 3 \text{ liquid balance)}`,
-  step: 0.01,
+  step: 0.001,
   value: 0.2,
 }));
 ```
