@@ -943,20 +943,20 @@ ${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toFixed()} \, \%`}
 
 ```js
 const pricingData = [];
-for (let paramGi = 0.0; paramGi <= 1.0; paramGi += 0.1) {
+for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
       pricingData.push({
         key: "ΔA",
-        ai: 0.0,
+        ai: 0,
         gi: paramGi,
         value: NaN,
       })
       pricingData.push({
         key: "Normalised ΔA",
-        ai: 0.0,
+        ai: 0,
         gi: paramGi,
         value: NaN,
       })
-    for (let paramAi = 0.1; paramAi <= 1.0; paramAi += 0.1) {
+    for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
         pricingData.push({
           key: "ΔA",
           ai: paramAi,
@@ -995,8 +995,8 @@ Plot.plot({
   color: { legend: true,
     scheme: "Spectral",
     type: "sequential", label: "ΔA" },
-  x: { ticks: d3.range(0.0, 1.01, 0.1), label: "Aᵢ" },
-  y: { ticks: d3.range(0.0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
+  x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
+  y: { ticks: d3.range(0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
   marks: [
     Plot.frame(),
     Plot.rect(pricingData, {
@@ -1013,8 +1013,8 @@ Plot.plot({
       fill: d => contrastingTextColor(
         d3.scaleSequential(
           [
-            computeDeltaA(0.1, 1.0, inputDeltaBarCi),
-            computeDeltaA(1.0, 1.0, inputDeltaBarCi),
+            computeDeltaA(0.1, 1, inputDeltaBarCi),
+            computeDeltaA(1, 1, inputDeltaBarCi),
           ],
           d3.interpolateSpectral,
         )(d.value),
@@ -1025,10 +1025,10 @@ Plot.plot({
 ```
 
 ```js
-const inputDeltaBarCi = view(Inputs.range([0.01, 1.0], {
+const inputDeltaBarCi = view(Inputs.range([0.01, 1], {
   label: tex`\Delta \bar C_i \text{ (present-value carbon bought)}`,
   step: 0.01,
-  value: 1.0,
+  value: 1,
 }));
 ```
 
@@ -1048,8 +1048,8 @@ Plot.plot({
     type: "sequential",
     label: "Normalised ΔA",
   },
-  x: { ticks: d3.range(0.0, 1.01, 0.1), label: "Aᵢ" },
-  y: { ticks: d3.range(0.0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
+  x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
+  y: { ticks: d3.range(0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
   marks: [
     Plot.frame(),
     Plot.rect(pricingData, {
@@ -1066,8 +1066,8 @@ Plot.plot({
       fill: d => contrastingTextColor(
         d3.scaleSequential(
           [
-            computeDeltaA(1.0, 0.0, inputDeltaBarCi) / inputDeltaBarCi,
-            computeDeltaA(1.0, 1.0, inputDeltaBarCi) / inputDeltaBarCi,
+            computeDeltaA(1, 0, inputDeltaBarCi) / inputDeltaBarCi,
+            computeDeltaA(1, 1, inputDeltaBarCi) / inputDeltaBarCi,
           ],
           d3.interpolateSpectral,
         )(d.value)
@@ -1102,8 +1102,128 @@ The implied balance for any zero carbon asset is given as:
 \tilde C_\emptyset = \left( \prod_{j=1}^J \bar C_j^{A_j} \right)^{1 / \sum_1^J A_j} \tag{19}
 ```
 
+```js
+function weightedGeometricMean(v, weights) {
+  if (v.length !== weights.length) {
+    throw new Error("Vectors must have the same length");
+  }
+  const weigthedProduct = v.reduce(
+    (acc, val, i) => acc * Math.pow(val, weights[i]),
+    1,
+  );
+  return Math.pow(weigthedProduct, 1 / d3.sum(weights));
+}
+```
+
+```js
+const vecBarC = [inputC1, inputC2, inputC3];
+
+const vecA = [inputA1, inputA2, inputA3];
+
+const paramTildeCnull = weightedGeometricMean(vecBarC, vecA);
+```
+
 Hence ${tex`\tilde C_\emptyset`} can be substituted in Equation (16) for
 ${tex`\bar C_i`} and the process can compute.
+
+```js
+const balanceData = [];
+for (let i = 0; i < vecBarC.length; i++) {
+  balanceData.push({ key: "Carbon Balance", value: vecBarC[i], class: i + 1 });
+  balanceData.push({ key: "A Stake", value: vecA[i], class: i + 1 });
+}
+const getCarbonBalance = d => d.key === "Carbon Balance" ? d.value : NaN;
+const getAStake = d => d.key === "A Stake" ? d.value : NaN;
+
+const stringTildeCnull = `Implied Balance C̃∅ = ${paramTildeCnull.toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 1, maximumFractionDigits: 1 },
+)} tCO2eq`;
+
+const balanceParam = [{ key: stringTildeCnull, value: paramTildeCnull }];
+```
+
+```js
+Plot.plot({
+  title: "Implied Balance of Zero-Carbon Classes",
+  color: {
+    legend: true,
+    range: [4, 9].map(i => d3.schemeCategory10[i]),
+    domain: ["Carbon Balance", stringTildeCnull],
+  },
+  x: { label: "Carbon Class" },
+  y: {
+    type: "log",
+    domain: [1, 1e9],
+    grid: true,
+    label: "Carbon Balance (tCO2eq)",
+  },
+  insetTop: 16,
+  marks: [
+    Plot.frame(),
+    Plot.rectY(balanceData, {
+      x: "class",
+      y1: 1,
+      y2: getCarbonBalance,
+      fill: "key",
+    }),
+    Plot.ruleY(balanceParam, {
+      y: "value",
+      stroke: "key",
+      strokeWidth : 2,
+      strokeDasharray: 4,
+    }),
+    Plot.text(balanceData, {
+      x: "class",
+      y: 100,
+      y: d => 1.5 * d3.filter(
+        d3.filter(balanceData, getCarbonBalance),
+        c => c.class === d.class,
+      )[0].value,
+      text: d =>
+        Number.isNaN(getAStake(d)) ? null : "Aᵢ = " + d.value.toLocaleString(
+          "en-GB",
+          { style: "percent", maximumFractionDigits: 0 },
+        ),
+      fill: "black",
+    }),
+  ],
+})
+```
+
+```js
+const inputC1 = view(Inputs.range([1, 1e9], {
+  label: tex`\bar C_1 \text{ (class } 1 \text{ present-value balance)}`,
+  step: 1,
+  value: 1e7,
+  transform: Math.log,
+}));
+const inputC2 = view(Inputs.range([1, 1e9], {
+  label: tex`\bar C_2 \text{ (class } 2 \text{ present-value balance)}`,
+  step: 1,
+  value: 1e5,
+  transform: Math.log,
+}));
+const inputC3 = view(Inputs.range([1, 1e9], {
+  label: tex`\bar C_3 \text{ (class } 3 \text{ present-value balance)}`,
+  step: 1,
+  value: 1e3,
+  transform: Math.log,
+}));
+const inputA1 = view(Inputs.range([0.0, 1/3], {
+  label: tex`A_1 \text{ (} A \text{ stake pricing class } 1 \text)`,
+  step: 0.01,
+  value: 0.1,
+}));
+const inputA2 = view(Inputs.range([0.0, 1/3], {
+  label: tex`A_2 \text{ (} A \text{ stake pricing class } 2 \text)`,
+  value: 0.1,
+}));
+const inputA3 = view(Inputs.range([0.0, 1/3], {
+  label: tex`A_3 \text{ (} A \text{ stake pricing class } 3 \text)`,
+  value: 0.1,
+}));
+```
 
 ### 6.2 Carbon Retirement (AAM Sells)
 
