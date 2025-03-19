@@ -519,8 +519,7 @@ const yieldParams = [
 
 ```js
 Plot.plot({
-  title: "Yield",
-  subtitle: `(${stringS}, ${stringI})`,
+  caption: `Yield (${stringS}, ${stringI})`,
   color: {
     legend: true,
     range: d3.schemeCategory10,
@@ -539,44 +538,44 @@ Plot.plot({
   marks: [
     Plot.frame(),
     Plot.axisY({ anchor: "left", label: "Stake A by Maturity (%)" }),
-    Plot.axisY(
-      yieldScale.ticks(),
-      { 
-        anchor: "right",
-        label: "Yield Rates (%)",
-        y: yieldScale,
-        tickFormat: yieldScale.tickFormat(),
-      },
-    ),
-    Plot.rectY(
-      yieldData,
-      {
-        x1: d => d.time - 0.45,
-        x2: d => d.time + 0.45,
-        y: getStake,
-        fill: "key",
-      },
-    ),
-    Plot.ruleX(
-      yieldParams,
-      { x: "time", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
-    ),
-    Plot.lineY(
-      yieldData,
-      Plot.mapY(mapYieldScale, { x: "time", y: getYieldTerm, stroke: "key" }),
-    ),
-    Plot.dotY(
-      yieldData,
-      Plot.mapY(mapYieldScale, { x: "time", y: getYieldTerm, fill: "key" }),
-    ),
-    Plot.lineY(
-      yieldData,
-      Plot.mapY(mapYieldScale, { x: "time", y: getRealYield, stroke: "key" }),
-    ),
-    Plot.dotY(
-      yieldData,
-      Plot.mapY(mapYieldScale, { x: "time", y: getRealYield, fill: "key" }),
-    ),
+    Plot.axisY(yieldScale.ticks(), { 
+      anchor: "right",
+      label: "Yield Rates (%)",
+      y: yieldScale,
+      tickFormat: yieldScale.tickFormat(),
+    }),
+    Plot.rectY(yieldData, {
+      x1: d => d.time - 0.45,
+      x2: d => d.time + 0.45,
+      y: getStake,
+      fill: "key",
+    }),
+    Plot.ruleX(yieldParams, {
+      x: "time",
+      stroke: "key",
+      strokeWidth : 2,
+      strokeDasharray: 4,
+    }),
+    Plot.lineY(yieldData, Plot.mapY(mapYieldScale, {
+      x: "time",
+      y: getYieldTerm,
+      stroke: "key",
+    })),
+    Plot.dotY(yieldData, Plot.mapY(mapYieldScale, {
+      x: "time",
+      y: getYieldTerm,
+      fill: "key",
+    })),
+    Plot.lineY(yieldData, Plot.mapY(mapYieldScale, {
+      x: "time",
+      y: getRealYield,
+      stroke: "key",
+    })),
+    Plot.dotY(yieldData, Plot.mapY(mapYieldScale, {
+      x: "time",
+      y: getRealYield,
+      fill: "key",
+    })),
   ],
 })
 ```
@@ -601,7 +600,7 @@ const inputI = view(Inputs.range([0, 0.1], {
 
 ```js
 Plot.plot({
-  title: "Discount Rate",
+  caption: "Discount Rate",
   color: {
     legend: true,
     range: [8, 5, 3, 4].map(i => d3.schemeCategory10[i]),
@@ -610,7 +609,7 @@ Plot.plot({
   x: {
     ticks: d3.range(1, 11),
     domain: [0.25, 10.45],
-    label: "Time to Expiry (Years)",
+    label: "Time to Expiry (Years)"
   },
   y: { domain: [0, 100], grid: true },
   clip: true,
@@ -621,19 +620,18 @@ Plot.plot({
     Plot.frame(),
     Plot.axisY({ anchor: "left", label: "Cumulative Stake (%)" }),
     Plot.axisY({ anchor: "right", label: "Discount (%)" }),
-    Plot.rectY(
-      yieldData,
-      {
-        x1: d => d.time - 0.45,
-        x2: d => d.time + 0.45,
-        y: getCumStake,
-        fill: "key",
-      },
-    ),
-    Plot.ruleX(
-      yieldParams,
-      { x: "time", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
-    ),
+    Plot.rectY(yieldData, {
+      x1: d => d.time - 0.45,
+      x2: d => d.time + 0.45,
+      y: getCumStake,
+      fill: "key",
+    }),
+    Plot.ruleX(yieldParams, {
+      x: "time",
+      stroke: "key",
+      strokeWidth : 2,
+      strokeDasharray: 4,
+    }),
     Plot.lineY(yieldData, { x: "time", y: getDiscount, stroke: "key" }),
     Plot.dotY(yieldData, { x: "time", y: getDiscount, fill: "key" }),
   ],
@@ -776,13 +774,17 @@ const heldCarbonParam = [{ key: stringBarCi, value: 100 * paramBarCi }];
 
 ```js
 Plot.plot({
-  title: "Carbon Held in the AAM",
+  caption: "Carbon Held in the AAM",
   color: {
     legend: true,
     range: [2, 5, 6].map(i => d3.schemeCategory10[i]),
     domain: ["Liquidity Schedule", "Discount Curve", stringBarCi],
   },
-  x: { label: "Time to Expiry (Years)" },
+  x: {
+    label: "Time to Expiry (Years)",
+    labelAnchor: "right",
+    labelArrow: true,
+  },
   y: { domain: [0, 100], grid: true },
   insetTop: 16,
   clip: true,
@@ -791,10 +793,12 @@ Plot.plot({
     Plot.axisY({ anchor: "left", label: "Quantity of Carbon (%)" }),
     Plot.axisY({ anchor: "right", label: "Discount (%)" }),
     Plot.rectY(carbonHeldData, { x: "time", y: getLiqSchedule, fill: "key" }),
-    Plot.ruleY(
-      heldCarbonParam,
-      { y: "value", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
-    ),
+    Plot.ruleY(heldCarbonParam, {
+      y: "value",
+      stroke: "key",
+      strokeWidth : 2,
+      strokeDasharray: 4,
+    }),
     Plot.lineY(carbonHeldData, { x: "time", y: getDiscount, stroke: "key" }),
     Plot.dotY(carbonHeldData, { x: "time", y: getDiscount, fill: "key" }),
   ],
@@ -883,13 +887,17 @@ const boughtCarbonParam = [
 
 ```js
 Plot.plot({
-  title: "Carbon Bought by the AAM",
+  caption: "Carbon Bought by the AAM",
   color: {
     legend: true,
     range: [3, 5, 7].map(i => d3.schemeCategory10[i]),
     domain: ["Carbon Bought", "Discount Curve", stringDeltaBarCi],
   },
-  x: { label: "Time to Expiry (Years)" },
+  x: {
+    label: "Time to Expiry (Years)",
+    labelAnchor: "right",
+    labelArrow: true,
+  },
   y: { domain: [0, 100], grid: true },
   insetTop: 16,
   clip: true,
@@ -898,10 +906,12 @@ Plot.plot({
     Plot.axisY({ anchor: "left", label: "Quantity of Carbon (%)" }),
     Plot.axisY({ anchor: "right", label: "Discount (%)" }),
     Plot.rectY(carbonBuyData, { x: "time", y: getCarbonBought, fill: "key" }),
-    Plot.ruleY(
-      boughtCarbonParam,
-      { y: "value", stroke: "key", strokeWidth : 2, strokeDasharray: 4 },
-    ),
+    Plot.ruleY(boughtCarbonParam, {
+      y: "value",
+      stroke: "key",
+      strokeWidth : 2,
+      strokeDasharray: 4,
+    }),
     Plot.lineY(carbonBuyData, { x: "time", y: getDiscount, stroke: "key" }),
     Plot.dotY(carbonBuyData, { x: "time", y: getDiscount, fill: "key" }),
   ],
@@ -1001,10 +1011,11 @@ const getNormDeltaA = d => d.key === "Normalised ΔA" ? d.value : NaN;
 
 ```js
 Plot.plot({
-  title: "Heatmap of ΔA with ΔC̄ᵢ = " + inputDeltaBarCi.toLocaleString(
-    "en-GB",
-    { style: "percent", maximumFractionDigits: 0 },
-  ),
+  caption: html`Heatmap of ${tex`\Delta A`} with
+          ${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toLocaleString(
+            "en-GB",
+            { maximumFractionDigits: 0 },
+          )} \, \%`}`,
   color: { legend: true, scheme: "Spectral", type: "sequential", label: "ΔA" },
   x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
   y: { ticks: d3.range(0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
@@ -1052,10 +1063,11 @@ ${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toFixed()} \, \%`}
 
 ```js
 Plot.plot({
-  title: "Normalised Map of ΔA with ΔC̄ᵢ = " + inputDeltaBarCi.toLocaleString(
-    "en-GB",
-    { style: "percent", maximumFractionDigits: 0 },
-  ),
+  caption: html`Normalised map of ${tex`\Delta A`} with
+          ${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toLocaleString(
+            "en-GB",
+            { maximumFractionDigits: 0 },
+          )} \, \%`}`,
   color: {
     legend: true,
     scheme: "Spectral",
@@ -1152,9 +1164,9 @@ for (let i = 0; i < vecBarC.length; i++) {
 const getCarbonBalance = d => d.key === "Carbon Balance" ? d.value : NaN;
 const getAStake = d => d.key === "A Stake" ? d.value : NaN;
 
-const stringTildeCnull = `Implied Balance C̃∅ = ${paramTildeCnull.toLocaleString(
+const stringTildeCnull = `Implied Balance: ${paramTildeCnull.toLocaleString(
   "en-GB",
-  { minimumFractionDigits: 1, maximumFractionDigits: 1 },
+  { maximumFractionDigits: 0 },
 )} tCO2eq`;
 
 const balanceParam = [{ key: stringTildeCnull, value: paramTildeCnull }];
@@ -1162,20 +1174,20 @@ const balanceParam = [{ key: stringTildeCnull, value: paramTildeCnull }];
 
 ```js
 Plot.plot({
-  title: "Implied Balance of Zero-Carbon Classes",
+  caption: "Implied Balance of a Zero-Carbon Class",
   color: {
     legend: true,
-    range: [4, 9].map(i => d3.schemeCategory10[i]),
+    range: [4, 1].map(i => d3.schemeCategory10[i]),
     domain: ["Carbon Balance", stringTildeCnull],
   },
-  x: { label: "Carbon Class" },
+  x: { label: "Carbon Class", labelAnchor: "right", labelArrow: true },
   y: {
     type: "log",
     domain: [1, 1e9],
     grid: true,
     label: "Carbon Balance (tCO2eq)",
   },
-  insetTop: 16,
+  insetTop: 24,
   marks: [
     Plot.frame(),
     Plot.rectY(balanceData, {
@@ -1193,7 +1205,7 @@ Plot.plot({
     Plot.text(balanceData, {
       x: "class",
       y: 100,
-      y: d => 1.5 * d3.filter(
+      y: d => 2 * d3.filter(
         d3.filter(balanceData, getCarbonBalance),
         c => c.class === d.class,
       )[0].value,
@@ -1202,7 +1214,9 @@ Plot.plot({
           "en-GB",
           { style: "percent", maximumFractionDigits: 0 },
         ),
+      fontSize: "1.5em",
       fill: "black",
+      stroke: "white",
     }),
   ],
 })
@@ -1274,7 +1288,10 @@ function computeDeltaCi(Ai, Gi, deltaA) {
 ```
 
 <p class="u-center">Figure 11: Proportion of Carbon Retired when
-${tex`\Delta A = 10 \, \%`}
+${tex`\Delta A = ${(100 * inputDeltaA).toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 1, maximumFractionDigits: 1 },
+)} \, \%`}
 
 ```js
 const retirementData = [];
@@ -1299,10 +1316,11 @@ const getDeltaCi = d => d.key === "-ΔCᵢ" ? d.value : NaN;
 
 ```js
 Plot.plot({
-  title: "Heatmap of -ΔCᵢ with ΔA = " + inputDeltaA.toLocaleString(
-    "en-GB",
-    { style: "percent", maximumFractionDigits: 0 },
-  ),
+  caption: html`Heatmap of ${tex`-\Delta C_i`} with
+          ${tex`\Delta A = ${(100 * inputDeltaA).toLocaleString(
+            "en-GB",
+            { minimumFractionDigits: 1, maximumFractionDigits: 1 },
+          )} \, \%`}`,
   color: {
     legend: true,
     scheme: "Spectral",
@@ -1342,9 +1360,9 @@ Plot.plot({
 ```
 
 ```js
-const inputDeltaA = view(Inputs.range([0.01, 0.99], {
+const inputDeltaA = view(Inputs.range([0.001, 0.999], {
   label: tex`\Delta A \text{ (quantity of } A \text{ tokens burned)}`,
-  step: 0.01,
+  step: 0.001,
   value: 0.1,
 }));
 ```
