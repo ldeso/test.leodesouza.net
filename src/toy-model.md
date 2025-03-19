@@ -495,15 +495,15 @@ const yieldScale = d3.scaleLinear(yieldDomain, stakeRange);
 const mapYieldScale = x => x.map(yieldScale);
 
 const stringS = "Total Stake = " + inputS.toLocaleString(
-  "en-US",
+  "en-GB",
   { style: "percent", minimumFractionDigits: 2 },
 );
 const stringI = "Inflation = " + inputI.toLocaleString(
-  "en-US",
+  "en-GB",
   { style: "percent", minimumFractionDigits: 2 },
 );
-const stringD = `D = ${paramD.toLocaleString("en-US")} years`;
-const stringC = `√C = ${Math.sqrt(paramC).toLocaleString("en-US")} years`;
+const stringD = `D = ${paramD.toLocaleString("en-GB")} years`;
+const stringC = `√C = ${Math.sqrt(paramC).toLocaleString("en-GB")} years`;
 
 const yieldParams = [
   { key: stringD, time: paramD },
@@ -761,7 +761,7 @@ for (let t = 3; t < vecE.length; t += 4) {
 const getLiqSchedule = d => d.key === "Liquidity Schedule" ? d.value : NaN;
 
 const stringBarCi = `Present-Value Carbon C̄ᵢ = ${paramBarCi.toLocaleString(
-  "en-US",
+  "en-GB",
   { style: "percent", minimumFractionDigits: 2 },
 )}`;
 
@@ -861,7 +861,7 @@ const getCarbonBought = d => d.key === "Carbon Bought" ? d.value : NaN;
 
 const stringDeltaBarCi = "Present-Value Bought Carbon ΔC̄ᵢ = " +
         paramDeltaBarCi.toLocaleString(
-          "en-US",
+          "en-GB",
           { style: "percent", minimumFractionDigits: 2 },
         );
 const boughtCarbonParam = [
@@ -925,6 +925,12 @@ Equation (17) as ${tex`\mathsf{RHS}`}:
 \Delta A = \exp(\mathsf{RHS}) − 1 \tag{18}
 ```
 
+```js
+function computeDeltaA(Ai, Gi, deltaCi) {
+    return Math.exp((Ai - (Ai ** 2 * Math.pow(1 - Gi, 2) / 2)) * Math.log(1 + deltaCi)) - 1;
+}
+```
+
 Finally, ${tex`\Delta A`} is applied to the outstanding supply of ${tex`A`} to
 solve for token quantities.
 
@@ -935,12 +941,140 @@ Figure 10 to ${tex`\Delta \bar C_i A_i`}.
 <p class="u-center">Figure 9: ${tex`A`} Price Curves (${tex`\Delta A`}) when
 ${tex`\Delta \bar C_i = 100 \, \%`}
 
-![A Price Curves](toy-model/a_price.png)
+```js
+const pricingData = [];
+for (let paramGi = 0.0; paramGi <= 1.0; paramGi += 0.1) {
+      pricingData.push({
+        key: "ΔA",
+        ai: 0.0,
+        gi: paramGi,
+        value: NaN,
+      })
+      pricingData.push({
+        key: "Normalised ΔA",
+        ai: 0.0,
+        gi: paramGi,
+        value: NaN,
+      })
+    for (let paramAi = 0.1; paramAi <= 1.0; paramAi += 0.1) {
+        pricingData.push({
+          key: "ΔA",
+          ai: paramAi,
+          gi: paramGi,
+          value: computeDeltaA(paramAi, paramGi, inputDeltaBarCi),
+        })
+        pricingData.push({
+          key: "Normalised ΔA",
+          ai: paramAi,
+          gi: paramGi,
+          value: computeDeltaA(paramAi, paramGi, inputDeltaBarCi) /
+                  (inputDeltaBarCi * paramAi),
+        })
+    }
+}
+const getDeltaA = d => d.key === "ΔA" ? d.value : NaN;
+const getNormalisedDeltaA = d => d.key === "Normalised ΔA" ? d.value : NaN;
+```
 
-<p class="u-center">Figure 10: Normalized ${tex`A`} Price Curves
+```js
+function contrastingTextColor(backgroundColor) {
+  if (d3.hsl(backgroundColor).l < 0.5) {
+    return "white";
+  } else {
+    return "black";
+  }
+}
+```
+
+```js
+Plot.plot({
+  title: "Heatmap of ΔA with ΔC̄ᵢ = " + inputDeltaBarCi.toLocaleString(
+    "en-GB",
+    { style: "percent" },
+  ),
+  color: { legend: true,
+    scheme: "Spectral",
+    type: "sequential", label: "ΔA" },
+  x: { ticks: d3.range(0.0, 1.01, 0.1), label: "Aᵢ" },
+  y: { ticks: d3.range(0.0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
+  marks: [
+    Plot.frame(),
+    Plot.rect(pricingData, {
+        x1: d => d.ai - 0.05,
+        x2: d => d.ai + 0.05,
+        y1: d => d.gi - 0.05,
+        y2: d => d.gi + 0.05,
+        fill: getDeltaA,
+    }),
+    Plot.text(pricingData, {
+      x: "ai",
+      y: "gi",
+      text: d => Number.isNaN(getDeltaA(d)) ? "" : d.value.toFixed(2),
+      fill: d => contrastingTextColor(
+        d3.scaleSequential(
+          [
+            computeDeltaA(0.1, 1.0, inputDeltaBarCi),
+            computeDeltaA(1.0, 1.0, inputDeltaBarCi),
+          ],
+          d3.interpolateSpectral,
+        )(d.value),
+      ),
+    })
+  ],
+})
+```
+
+```js
+const inputDeltaBarCi = view(Inputs.range([0.01, 1.0], {
+  label: tex`\Delta \bar C_i \text{ (present-value carbon bought)}`,
+  step: 0.01,
+  value: 1.0,
+}));
+```
+
+<p class="u-center">Figure 10: Normalised ${tex`A`} Price Curves
 (${tex`\Delta A`}) when ${tex`\Delta \bar C_i = 100 \, \%`}
 
-![Normalized A Price Curves](toy-model/a_price_norm.png)
+```js
+Plot.plot({
+  title: "Normalised Map of ΔA with ΔC̄ᵢ = " + inputDeltaBarCi.toLocaleString(
+    "en-GB",
+    { style: "percent" },
+  ),
+  color: {
+    legend: true,
+    scheme: "Spectral",
+    type: "sequential",
+    label: "Normalised ΔA",
+  },
+  x: { ticks: d3.range(0.0, 1.01, 0.1), label: "Aᵢ" },
+  y: { ticks: d3.range(0.0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
+  marks: [
+    Plot.frame(),
+    Plot.rect(pricingData, {
+        x1: d => d.ai - 0.05,
+        x2: d => d.ai + 0.05,
+        y1: d => d.gi - 0.05,
+        y2: d => d.gi + 0.05,
+        fill: getNormalisedDeltaA,
+    }),
+    Plot.text(pricingData, {
+      x: "ai",
+      y: "gi",
+      text: d => Number.isNaN(getNormalisedDeltaA(d)) ? "" : d.value.toFixed(2),
+      fill: d => contrastingTextColor(
+        d3.scaleSequential(
+          [
+            computeDeltaA(1.0, 0.0, inputDeltaBarCi) / inputDeltaBarCi,
+            computeDeltaA(1.0, 1.0, inputDeltaBarCi) / inputDeltaBarCi,
+          ],
+          d3.interpolateSpectral,
+        )(d.value)
+      ),
+    })
+  ],
+})
+```
 
 Noting that the sensitivity to ${tex`G`} increases as ${tex`A`} increases and
 the effects become more pronounced as ${tex`\Delta \bar C_i`} increases.
