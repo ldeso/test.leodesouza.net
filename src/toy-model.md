@@ -904,7 +904,7 @@ const inputDeltaCi = view(Inputs.range([0, 1], {
 }));
 const inputMatIdx = view(Inputs.range([0, 40], {
   label: tex`t \text{ (maturity index)}`,
-  step: 1,
+  step: 4,
   value: 24,
 }));
 ```
