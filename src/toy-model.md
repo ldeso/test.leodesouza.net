@@ -432,7 +432,7 @@ Y_t = \exp \left( \frac{Z_t}{365} \right) - 1 \tag{8}
 
 ```js
 function computeY(vecZ) {
-    return vecZ.map(z => Math.exp(z / 365) - 1);
+    return vecZ.map(z => Math.expm1(z / 365));
 }
 ```
 
@@ -818,7 +818,7 @@ function computeDeltaCi0(inputDeltaCi, t) {
   return inputMatIdx === 0 ? inputDeltaCi : 0;
 }
 
-function computeDeltaCi(inputDeltaCi, t) {
+function computeVecDeltaCi(inputDeltaCi, t) {
   const vecDeltaCi = Array(40).fill(0);
   if (t !== 0) {
     vecDeltaCi[t - 1] = inputDeltaCi;
@@ -830,7 +830,7 @@ function computeDeltaCi(inputDeltaCi, t) {
 ```js
 const paramDeltaCi0 = computeDeltaCi0(inputDeltaCi, inputMatIdx);
 
-const vecDeltaCi = computeDeltaCi(inputDeltaCi, inputMatIdx);
+const vecDeltaCi = computeVecDeltaCi(inputDeltaCi, inputMatIdx);
 
 const paramDeltaBarCi = paramDeltaCi0 + dotProduct(vecB, vecDeltaCi);
 ```
@@ -927,7 +927,7 @@ Equation (17) as ${tex`\mathsf{RHS}`}:
 
 ```js
 function computeDeltaA(Ai, Gi, deltaCi) {
-    return Math.exp((Ai - (Ai ** 2 * Math.pow(1 - Gi, 2) / 2)) * Math.log(1 + deltaCi)) - 1;
+    return Math.expm1((Ai - (Ai**2 * (1 - Gi)**2 / 2)) * Math.log1p(deltaCi));
 }
 ```
 
@@ -992,9 +992,7 @@ Plot.plot({
     "en-GB",
     { style: "percent" },
   ),
-  color: { legend: true,
-    scheme: "Spectral",
-    type: "sequential", label: "ΔA" },
+  color: { legend: true, scheme: "Spectral", type: "sequential", label: "ΔA" },
   x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
   y: { ticks: d3.range(0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
   marks: [
@@ -1250,10 +1248,84 @@ ${tex`\mathsf{RHS}`}:
 \Delta C_i = \exp(\mathsf{RHS}) - 1 \tag{21}
 ```
 
+```js
+function computeDeltaCi(Ai, Gi, deltaA) {
+    return Math.expm1(Math.log1p(-deltaA) / (Ai + (Ai**2 * (1 - Gi)**2 / 2)));
+}
+```
+
 <p class="u-center">Figure 11: Proportion of Carbon Retired when
 ${tex`\Delta A = 10 \, \%`}
 
-![Proportion of Carbon Retired when ∆A = 0.10](toy-model/carbon_retired.png)
+```js
+const retirementData = [];
+for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
+      retirementData.push({
+        key: "-ΔCᵢ",
+        ai: 0,
+        gi: paramGi,
+        value: NaN,
+      })
+    for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
+        retirementData.push({
+          key: "-ΔCᵢ",
+          ai: paramAi,
+          gi: paramGi,
+          value: -computeDeltaCi(paramAi, paramGi, inputDeltaA),
+        })
+    }
+}
+const getDeltaCi = d => d.key === "-ΔCᵢ" ? d.value : NaN;
+```
+
+```js
+Plot.plot({
+  title: "Heatmap of -ΔCᵢ with ΔA = " + inputDeltaA.toLocaleString(
+    "en-GB",
+    { style: "percent" },
+  ),
+  color: {
+    legend: true,
+    scheme: "Spectral",
+    type: "sequential",
+    label: "-ΔCᵢ",
+  },
+  x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
+  y: { ticks: d3.range(0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
+  marks: [
+    Plot.frame(),
+    Plot.rect(retirementData, {
+        x1: d => d.ai - 0.05,
+        x2: d => d.ai + 0.05,
+        y1: d => d.gi - 0.05,
+        y2: d => d.gi + 0.05,
+        fill: getDeltaCi,
+    }),
+    Plot.text(retirementData, {
+      x: "ai",
+      y: "gi",
+      text: d => Number.isNaN(getDeltaCi(d)) ? "" : d.value.toFixed(2),
+      fill: d => contrastingTextColor(
+        d3.scaleSequential(
+          [
+            -computeDeltaCi(1, 0, inputDeltaA),
+            -computeDeltaCi(0.1, 1, inputDeltaA),
+          ],
+          d3.interpolateSpectral,
+        )(d.value),
+      ),
+    })
+  ],
+})
+```
+
+```js
+const inputDeltaA = view(Inputs.range([0.01, 0.99], {
+  label: tex`\Delta A \text{ (quantity of } A \text{ tokens burned)}`,
+  step: 0.01,
+  value: 0.1,
+}));
+```
 
 Figure 11 shows the cost of Carbon increasing with ${tex`A_i`} and ${tex`G_i`}
 increasing.
