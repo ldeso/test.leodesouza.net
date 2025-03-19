@@ -939,7 +939,7 @@ portfolio pricing of the ${tex`A`} token. The data has been normalised in
 Figure 10 to ${tex`\Delta \bar C_i A_i`}.
 
 <p class="u-center">Figure 9: ${tex`A`} Price Curves (${tex`\Delta A`}) when
-${tex`\Delta \bar C_i = 100 \, \%`}
+${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toFixed()} \, \%`}
 
 ```js
 const pricingData = [];
@@ -1033,7 +1033,8 @@ const inputDeltaBarCi = view(Inputs.range([0.01, 1.0], {
 ```
 
 <p class="u-center">Figure 10: Normalised ${tex`A`} Price Curves
-(${tex`\Delta A`}) when ${tex`\Delta \bar C_i = 100 \, \%`}
+(${tex`\Delta A`}) when
+${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toFixed()} \, \%`}
 
 ```js
 Plot.plot({
