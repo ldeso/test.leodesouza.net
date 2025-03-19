@@ -1210,6 +1210,9 @@ const inputC3 = view(Inputs.range([1, 1e9], {
   value: 1e3,
   transform: Math.log,
 }));
+```
+
+```js
 const inputA1 = view(Inputs.range([0.0, 1/3], {
   label: tex`A_1 \text{ (} A \text{ stake pricing class } 1 \text)`,
   step: 0.01,
@@ -1217,10 +1220,12 @@ const inputA1 = view(Inputs.range([0.0, 1/3], {
 }));
 const inputA2 = view(Inputs.range([0.0, 1/3], {
   label: tex`A_2 \text{ (} A \text{ stake pricing class } 2 \text)`,
+  step: 0.01,
   value: 0.1,
 }));
 const inputA3 = view(Inputs.range([0.0, 1/3], {
   label: tex`A_3 \text{ (} A \text{ stake pricing class } 3 \text)`,
+  step: 0.01,
   value: 0.1,
 }));
 ```
