@@ -272,7 +272,7 @@ ${tex`t \in \{ 1, 2, \dots, 40 \}.`}
 - ${tex`E_t`}: Time to expiry expressed in years.
 
 ```js
-function constAreaLinear(range, area, inputSlope, slopeFactor = 0.002) {
+function constAreaLinear(range, area, inputSlope, slopeFactor = 0.007) {
   if (range.length === 1) {
     return [area];
   }
@@ -489,21 +489,27 @@ const getRealYield = d => d.key === "Real Yield" ? d.value : NaN;
 const getDiscount = d => d.key === "Discount Curve" ? d.value : NaN;
 const getCumStake = d => d.key === "Cumulative Stake A" ? d.value : NaN;
 
-const yieldDomain = [0, 2.042489344154689 * d3.max(yieldData, getYieldTerm)];
+const yieldDomain = [0, 2.0465335693747546 * d3.max(yieldData, getYieldTerm)];
 const stakeRange = [0, d3.max(yieldData, getStake)];
 const yieldScale = d3.scaleLinear(yieldDomain, stakeRange);
 const mapYieldScale = x => x.map(yieldScale);
 
 const stringS = "Total Stake = " + inputS.toLocaleString(
   "en-GB",
-  { style: "percent", minimumFractionDigits: 2 },
+  { style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 },
 );
 const stringI = "Inflation = " + inputI.toLocaleString(
   "en-GB",
-  { style: "percent", minimumFractionDigits: 2 },
+  { style: "percent", minimumFractionDigits: 2, maximumFractionDigits: 2 },
 );
-const stringD = `D = ${paramD.toLocaleString("en-GB")} years`;
-const stringC = `√C = ${Math.sqrt(paramC).toLocaleString("en-GB")} years`;
+const stringD = `D = ${paramD.toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+)} years`;
+const stringC = `√C = ${Math.sqrt(paramC).toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+)} years`;
 
 const yieldParams = [
   { key: stringD, time: paramD },
@@ -584,7 +590,7 @@ const inputS = view(Inputs.range([1e-4, 1], {
 const inputD = view(Inputs.range([0.25, 10], {
   label: tex`D \text{ (approximately)}`,
   step: 0.01,
-  value: 3.64,
+  value: 4.69,
 }));
 const inputI = view(Inputs.range([0, 0.1], {
   label: tex`\text{Inflation }`,
@@ -762,7 +768,7 @@ const getLiqSchedule = d => d.key === "Liquidity Schedule" ? d.value : NaN;
 
 const stringBarCi = `Present-Value Carbon C̄ᵢ = ${paramBarCi.toLocaleString(
   "en-GB",
-  { style: "percent", minimumFractionDigits: 2 },
+  { style: "percent", maximumFractionDigits: 0 },
 )}`;
 
 const heldCarbonParam = [{ key: stringBarCi, value: 100 * paramBarCi }];
@@ -801,7 +807,7 @@ const inputCi0 = view(Inputs.range([0, 1], {
   step: 1e-3,
 }));
 const inputLiqShape = view(Inputs.range([-1, 1], {
-  label: tex`\text{Shape of the liquidity schedule}`,
+  label: tex`\text{Example liquidity schedule shape}`,
   step: 1e-3,
 }));
 ```
@@ -814,8 +820,10 @@ be sold with a specific maturity index ${tex`t`}.
 ```
 
 ```js
+const paramMaturityIdx = 4 * inputEt;
+
 function computeDeltaCi0(inputDeltaCi, t) {
-  return inputMatIdx === 0 ? inputDeltaCi : 0;
+  return paramMaturityIdx === 0 ? inputDeltaCi : 0;
 }
 
 function computeVecDeltaCi(inputDeltaCi, t) {
@@ -828,9 +836,9 @@ function computeVecDeltaCi(inputDeltaCi, t) {
 ```
 
 ```js
-const paramDeltaCi0 = computeDeltaCi0(inputDeltaCi, inputMatIdx);
+const paramDeltaCi0 = computeDeltaCi0(inputDeltaCi, paramMaturityIdx);
 
-const vecDeltaCi = computeVecDeltaCi(inputDeltaCi, inputMatIdx);
+const vecDeltaCi = computeVecDeltaCi(inputDeltaCi, paramMaturityIdx);
 
 const paramDeltaBarCi = paramDeltaCi0 + dotProduct(vecB, vecDeltaCi);
 ```
@@ -862,7 +870,11 @@ const getCarbonBought = d => d.key === "Carbon Bought" ? d.value : NaN;
 const stringDeltaBarCi = "Present-Value Bought Carbon ΔC̄ᵢ = " +
         paramDeltaBarCi.toLocaleString(
           "en-GB",
-          { style: "percent", minimumFractionDigits: 2 },
+          {
+            style: "percent",
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          },
         );
 const boughtCarbonParam = [
   { key: stringDeltaBarCi, value: 100 * paramDeltaBarCi },
@@ -902,10 +914,10 @@ const inputDeltaCi = view(Inputs.range([0, 1], {
   step: 1e-3,
   value: 1,
 }));
-const inputMatIdx = view(Inputs.range([0, 40], {
-  label: tex`t \text{ (maturity index)}`,
-  step: 4,
-  value: 24,
+const inputEt = view(Inputs.range([0, 10], {
+  label: tex`E_t \text{ (years to expiry)}`,
+  step: 1,
+  value: 6,
 }));
 ```
 
@@ -939,9 +951,20 @@ portfolio pricing of the ${tex`A`} token. The data has been normalised in
 Figure 10 to ${tex`\Delta \bar C_i A_i`}.
 
 <p class="u-center">Figure 9: ${tex`A`} Price Curves (${tex`\Delta A`}) when
-${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toFixed()} \, \%`}
+${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toLocaleString(
+  "en-GB",
+  { maximumFractionDigits: 0 },
+)} \, \%`}
 
 ```js
+function contrastingTextColor(backgroundColor) {
+  if (d3.hsl(backgroundColor).l < 0.5) {
+    return "white";
+  } else {
+    return "black";
+  }
+}
+
 const pricingData = [];
 for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
       pricingData.push({
@@ -973,24 +996,14 @@ for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
     }
 }
 const getDeltaA = d => d.key === "ΔA" ? d.value : NaN;
-const getNormalisedDeltaA = d => d.key === "Normalised ΔA" ? d.value : NaN;
-```
-
-```js
-function contrastingTextColor(backgroundColor) {
-  if (d3.hsl(backgroundColor).l < 0.5) {
-    return "white";
-  } else {
-    return "black";
-  }
-}
+const getNormDeltaA = d => d.key === "Normalised ΔA" ? d.value : NaN;
 ```
 
 ```js
 Plot.plot({
   title: "Heatmap of ΔA with ΔC̄ᵢ = " + inputDeltaBarCi.toLocaleString(
     "en-GB",
-    { style: "percent" },
+    { style: "percent", maximumFractionDigits: 0 },
   ),
   color: { legend: true, scheme: "Spectral", type: "sequential", label: "ΔA" },
   x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
@@ -1007,7 +1020,10 @@ Plot.plot({
     Plot.text(pricingData, {
       x: "ai",
       y: "gi",
-      text: d => Number.isNaN(getDeltaA(d)) ? "" : d.value.toFixed(2),
+      text: d => Number.isNaN(getDeltaA(d)) ? "" : d.value.toLocaleString(
+        "en-GB",
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+      ),
       fill: d => contrastingTextColor(
         d3.scaleSequential(
           [
@@ -1038,7 +1054,7 @@ ${tex`\Delta \bar C_i = ${(100 * inputDeltaBarCi).toFixed()} \, \%`}
 Plot.plot({
   title: "Normalised Map of ΔA with ΔC̄ᵢ = " + inputDeltaBarCi.toLocaleString(
     "en-GB",
-    { style: "percent" },
+    { style: "percent", maximumFractionDigits: 0 },
   ),
   color: {
     legend: true,
@@ -1055,12 +1071,15 @@ Plot.plot({
         x2: d => d.ai + 0.05,
         y1: d => d.gi - 0.05,
         y2: d => d.gi + 0.05,
-        fill: getNormalisedDeltaA,
+        fill: getNormDeltaA,
     }),
     Plot.text(pricingData, {
       x: "ai",
       y: "gi",
-      text: d => Number.isNaN(getNormalisedDeltaA(d)) ? "" : d.value.toFixed(2),
+      text: d => Number.isNaN(getNormDeltaA(d)) ? "" : d.value.toLocaleString(
+        "en-GB",
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+      ),
       fill: d => contrastingTextColor(
         d3.scaleSequential(
           [
@@ -1282,7 +1301,7 @@ const getDeltaCi = d => d.key === "-ΔCᵢ" ? d.value : NaN;
 Plot.plot({
   title: "Heatmap of -ΔCᵢ with ΔA = " + inputDeltaA.toLocaleString(
     "en-GB",
-    { style: "percent" },
+    { style: "percent", maximumFractionDigits: 0 },
   ),
   color: {
     legend: true,
@@ -1304,7 +1323,10 @@ Plot.plot({
     Plot.text(retirementData, {
       x: "ai",
       y: "gi",
-      text: d => Number.isNaN(getDeltaCi(d)) ? "" : d.value.toFixed(2),
+      text: d => Number.isNaN(getDeltaCi(d)) ? "" : d.value.toLocaleString(
+        "en-GB",
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+      ),
       fill: d => contrastingTextColor(
         d3.scaleSequential(
           [
