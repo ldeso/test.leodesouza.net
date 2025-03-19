@@ -1398,6 +1398,14 @@ defined, we can determine an average for ${tex`G_\emptyset`}:
 G_\emptyset = \frac{1}{C_{\emptyset 0}} \sum_{k=1}^K G_k C_{k0} \tag{23}
 ```
 
+```js
+const vecC0 = [inputC1_0, inputC2_0, inputC3_0];
+
+const vecG = [inputG1, inputG2, inputG3];
+
+const paramGnull = weightedArithmeticMean(vecG, vecC0);
+```
+
 Substituting in Equation (20)
 
 ```tex
@@ -1406,6 +1414,95 @@ Substituting in Equation (20)
 
 The result ${tex`\Delta C_\emptyset`} is applied to the liquid elements of the
 residual portfolio to determine the delivery quantities.
+
+```js
+const unweightedData = [];
+for (let i = 0; i < vecC0.length; i++) {
+  unweightedData.push({ key: "Stake G", value: 100 * vecG[i], class: i + 1 });
+  unweightedData.push({
+    key: "Liquid Carbon Balance",
+    value: 100 * vecC0[i],
+    class: i + 1,
+  });
+}
+const getLiquidBalance = d => d.key === "Liquid Carbon Balance" ? d.value : NaN;
+const getGStake = d => d.key === "Stake G" ? d.value : NaN;
+
+const stringGnull = `Implied Stake G: ${paramGnull.toLocaleString(
+  "en-GB",
+  { style: "percent", maximumFractionDigits: 0 },
+)}`;
+
+const unweightedParam = [{ key: stringGnull, value: 100 * paramGnull }];
+```
+
+```js
+Plot.plot({
+  caption: "Implied G Stake of an Unweighted Carbon Class",
+  color: {
+    legend: true,
+    range: [2, 1, 4].map(i => d3.schemeCategory10[i]),
+    domain: ["Stake G", "Liquid Carbon Balance", stringGnull],
+  },
+  x: { label: "Carbon Class", labelAnchor: "right", labelArrow: true },
+  y: { domain: [0, 100/3], grid: true },
+  insetTop: 16,
+  marks: [
+    Plot.frame(),
+    Plot.axisY({ anchor: "left", label: "Stake (%)" }),
+    Plot.axisY({ anchor: "right", label: "Carbon Balance (%)" }),
+    Plot.rectY(unweightedData, {
+      x: "class",
+      y: getLiquidBalance,
+      fill: "key",
+    }),
+    Plot.lineY(unweightedData, { x: "class", y: getGStake, stroke: "key" }),
+    Plot.dotY(unweightedData, { x: "class", y: getGStake, fill: "key" }),
+    Plot.ruleY(unweightedParam, {
+      y: "value",
+      stroke: "key",
+      strokeWidth : 2,
+      strokeDasharray: 4,
+    }),
+  ],
+})
+```
+
+```js
+const inputG1 = view(Inputs.range([0.0, 1/3], {
+  label: tex`G_1 \text{ (} G \text{ stake pricing class } 1 \text)`,
+  step: 0.01,
+  value: 0.1,
+}));
+const inputG2 = view(Inputs.range([0.0, 1/3], {
+  label: tex`G_2 \text{ (} G \text{ stake pricing class } 2 \text)`,
+  step: 0.01,
+  value: 0.2,
+}));
+const inputG3 = view(Inputs.range([0.0, 1/3], {
+  label: tex`G_3 \text{ (} G \text{ stake pricing class } 3 \text)`,
+  step: 0.01,
+  value: 0.3,
+}));
+```
+
+```js
+const inputC1_0 = view(Inputs.range([0, 1/3], {
+  label: tex`C_{1 \, 0} \text{ (class } 1 \text{ liquid balance)}`,
+  step: 0.01,
+  value: 0.3,
+}));
+const inputC2_0 = view(Inputs.range([0, 1/3], {
+  label: tex`C_{2 \, 0} \text{ (class } 2 \text{ liquid balance)}`,
+  step: 0.01,
+  value: 0.1,
+}));
+const inputC3_0 = view(Inputs.range([0, 1/3], {
+  label: tex`C_{3 \, 0} \text{ (class } 3 \text{ liquid balance)}`,
+  step: 0.01,
+  value: 0.2,
+}));
+```
 
 If ${tex`A = 1:`}
 
