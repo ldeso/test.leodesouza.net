@@ -1311,7 +1311,6 @@ for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
         })
     }
 }
-const getDeltaCi = d => d.key === "-ΔCᵢ" ? d.value : NaN;
 ```
 
 ```js
@@ -1336,12 +1335,12 @@ Plot.plot({
         x2: d => d.ai + 0.05,
         y1: d => d.gi - 0.05,
         y2: d => d.gi + 0.05,
-        fill: getDeltaCi,
+        fill: "value",
     }),
     Plot.text(retirementData, {
       x: "ai",
       y: "gi",
-      text: d => Number.isNaN(getDeltaCi(d)) ? "" : d.value.toLocaleString(
+      text: d => Number.isNaN(d.value) ? "" : d.value.toLocaleString(
         "en-GB",
         { minimumFractionDigits: 2, maximumFractionDigits: 2 },
       ),
@@ -1675,6 +1674,12 @@ from the implied betas of each carbon class ${tex`i`}.
 \beta = \sqrt{\sum_{i=1}^n A_i - A_i (1 - G_i)^2} \tag{26}
 ```
 
+```js
+function computeBeta(Ai, Gi) {
+  return Math.sqrt(Ai - Ai * (1 - Gi)**2);
+}
+```
+
 The portfolio ${tex`\beta`} determines a yield factor for the liquidity pools of
 A to compensate for the implied risk levels.
 
@@ -1683,7 +1688,58 @@ per Class.
 
 <p class="u-center">Figure 15: Range of ${tex`\beta_i`}
 
-![Range of βᵢ](toy-model/beta_range.png)
+```js
+const betaData = [];
+for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
+      betaData.push({
+        key: "βᵢ",
+        ai: 0,
+        gi: paramGi,
+        value: NaN,
+      })
+    for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
+        betaData.push({
+          key: "βᵢ",
+          ai: paramAi,
+          gi: paramGi,
+          value: computeBeta(paramAi, paramGi),
+        })
+    }
+}
+```
+
+```js
+Plot.plot({
+  caption: html`Heatmap of ${tex`\beta_i`}`,
+  color: {
+    legend: true,
+    scheme: "Spectral",
+    type: "sequential",
+    label: "βᵢ",
+  },
+  x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
+  y: { ticks: d3.range(0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
+  marks: [
+    Plot.frame(),
+    Plot.rect(betaData, {
+        x1: d => d.ai - 0.05,
+        x2: d => d.ai + 0.05,
+        y1: d => d.gi - 0.05,
+        y2: d => d.gi + 0.05,
+        fill: "value",
+    }),
+    Plot.text(betaData, {
+      x: "ai",
+      y: "gi",
+      text: d => Number.isNaN(d.value) ? "" : d.value.toLocaleString(
+        "en-GB",
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+      ),
+      fill: d => contrastingTextColor(d3.interpolateSpectral(d.value)),
+    })
+  ],
+})
+```
 
 The table and figure below shows an example of the effects on ${tex`\beta`} on
 allocating large ${tex`G`} values to small ${tex`A`} values where the shift in
