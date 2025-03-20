@@ -977,33 +977,33 @@ function contrastingTextColor(backgroundColor) {
 
 const pricingData = [];
 for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
-      pricingData.push({
-        key: "ΔA",
-        ai: 0,
-        gi: paramGi,
-        value: NaN,
-      })
-      pricingData.push({
-        key: "Normalised ΔA",
-        ai: 0,
-        gi: paramGi,
-        value: NaN,
-      })
-    for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
-        pricingData.push({
-          key: "ΔA",
-          ai: paramAi,
-          gi: paramGi,
-          value: computeDeltaA(paramAi, paramGi, inputDeltaBarCi),
-        })
-        pricingData.push({
-          key: "Normalised ΔA",
-          ai: paramAi,
-          gi: paramGi,
-          value: computeDeltaA(paramAi, paramGi, inputDeltaBarCi) /
-                  (inputDeltaBarCi * paramAi),
-        })
-    }
+  pricingData.push({
+    key: "ΔA",
+    ai: 0,
+    gi: paramGi,
+    value: NaN,
+  })
+  pricingData.push({
+    key: "Normalised ΔA",
+    ai: 0,
+    gi: paramGi,
+    value: NaN,
+  })
+  for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
+    pricingData.push({
+      key: "ΔA",
+      ai: paramAi,
+      gi: paramGi,
+      value: computeDeltaA(paramAi, paramGi, inputDeltaBarCi),
+    })
+    pricingData.push({
+      key: "Normalised ΔA",
+      ai: paramAi,
+      gi: paramGi,
+      value: computeDeltaA(paramAi, paramGi, inputDeltaBarCi) /
+              (inputDeltaBarCi * paramAi),
+    })
+  }
 }
 const getDeltaA = d => d.key === "ΔA" ? d.value : NaN;
 const getNormDeltaA = d => d.key === "Normalised ΔA" ? d.value : NaN;
@@ -1022,11 +1022,11 @@ Plot.plot({
   marks: [
     Plot.frame(),
     Plot.rect(pricingData, {
-        x1: d => d.ai - 0.05,
-        x2: d => d.ai + 0.05,
-        y1: d => d.gi - 0.05,
-        y2: d => d.gi + 0.05,
-        fill: getDeltaA,
+      x1: d => d.ai - 0.05,
+      x2: d => d.ai + 0.05,
+      y1: d => d.gi - 0.05,
+      y2: d => d.gi + 0.05,
+      fill: getDeltaA,
     }),
     Plot.text(pricingData, {
       x: "ai",
@@ -1079,11 +1079,11 @@ Plot.plot({
   marks: [
     Plot.frame(),
     Plot.rect(pricingData, {
-        x1: d => d.ai - 0.05,
-        x2: d => d.ai + 0.05,
-        y1: d => d.gi - 0.05,
-        y2: d => d.gi + 0.05,
-        fill: getNormDeltaA,
+      x1: d => d.ai - 0.05,
+      x2: d => d.ai + 0.05,
+      y1: d => d.gi - 0.05,
+      y2: d => d.gi + 0.05,
+      fill: getNormDeltaA,
     }),
     Plot.text(pricingData, {
       x: "ai",
@@ -1296,20 +1296,20 @@ ${tex`\Delta A = ${(100 * inputDeltaA).toLocaleString(
 ```js
 const retirementData = [];
 for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
-      retirementData.push({
-        key: "-ΔCᵢ",
-        ai: 0,
-        gi: paramGi,
-        value: NaN,
-      })
-    for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
-        retirementData.push({
-          key: "-ΔCᵢ",
-          ai: paramAi,
-          gi: paramGi,
-          value: -computeDeltaCi(paramAi, paramGi, inputDeltaA),
-        })
-    }
+  retirementData.push({
+    key: "-ΔCᵢ",
+    ai: 0,
+    gi: paramGi,
+    value: NaN,
+  })
+  for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
+    retirementData.push({
+      key: "-ΔCᵢ",
+      ai: paramAi,
+      gi: paramGi,
+      value: -computeDeltaCi(paramAi, paramGi, inputDeltaA),
+    })
+  }
 }
 ```
 
@@ -1331,11 +1331,11 @@ Plot.plot({
   marks: [
     Plot.frame(),
     Plot.rect(retirementData, {
-        x1: d => d.ai - 0.05,
-        x2: d => d.ai + 0.05,
-        y1: d => d.gi - 0.05,
-        y2: d => d.gi + 0.05,
-        fill: "value",
+      x1: d => d.ai - 0.05,
+      x2: d => d.ai + 0.05,
+      y1: d => d.gi - 0.05,
+      y2: d => d.gi + 0.05,
+      fill: "value",
     }),
     Plot.text(retirementData, {
       x: "ai",
@@ -1545,20 +1545,20 @@ where ${tex`\varepsilon`} is the proportion retained:
 ```js
 const spreadData = [];
 for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
-      spreadData.push({
-        key: "spread",
-        ai: 0,
-        gi: paramGi,
-        value: NaN,
-      })
-    for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
-        spreadData.push({
-          key: "spread",
-          ai: paramAi,
-          gi: paramGi,
-          value: computeSpread(paramAi, paramGi, inputDeltaCinitial),
-        })
-    }
+  spreadData.push({
+    key: "spread",
+    ai: 0,
+    gi: paramGi,
+    value: NaN,
+  })
+  for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
+    spreadData.push({
+      key: "spread",
+      ai: paramAi,
+      gi: paramGi,
+      value: computeSpread(paramAi, paramGi, inputDeltaCinitial),
+    })
+  }
 }
 const getSpread = d => d.key === "spread" ? d.value : NaN;
 ```
@@ -1582,11 +1582,11 @@ Plot.plot({
   marks: [
     Plot.frame(),
     Plot.rect(spreadData, {
-        x1: d => d.ai - 0.05,
-        x2: d => d.ai + 0.05,
-        y1: d => d.gi - 0.05,
-        y2: d => d.gi + 0.05,
-        fill: getSpread,
+      x1: d => d.ai - 0.05,
+      x2: d => d.ai + 0.05,
+      y1: d => d.gi - 0.05,
+      y2: d => d.gi + 0.05,
+      fill: getSpread,
     }),
     Plot.text(spreadData, {
       x: "ai",
@@ -1691,20 +1691,20 @@ per Class.
 ```js
 const betaData = [];
 for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
-      betaData.push({
-        key: "βᵢ",
-        ai: 0,
-        gi: paramGi,
-        value: NaN,
-      })
-    for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
-        betaData.push({
-          key: "βᵢ",
-          ai: paramAi,
-          gi: paramGi,
-          value: computeBeta(paramAi, paramGi),
-        })
-    }
+  betaData.push({
+    key: "βᵢ",
+    ai: 0,
+    gi: paramGi,
+    value: NaN,
+  })
+  for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
+    betaData.push({
+      key: "βᵢ",
+      ai: paramAi,
+      gi: paramGi,
+      value: computeBeta(paramAi, paramGi),
+    })
+  }
 }
 ```
 
@@ -1722,11 +1722,11 @@ Plot.plot({
   marks: [
     Plot.frame(),
     Plot.rect(betaData, {
-        x1: d => d.ai - 0.05,
-        x2: d => d.ai + 0.05,
-        y1: d => d.gi - 0.05,
-        y2: d => d.gi + 0.05,
-        fill: "value",
+      x1: d => d.ai - 0.05,
+      x2: d => d.ai + 0.05,
+      y1: d => d.gi - 0.05,
+      y2: d => d.gi + 0.05,
+      fill: "value",
     }),
     Plot.text(betaData, {
       x: "ai",
@@ -1800,10 +1800,64 @@ The allocation to ${tex`G`} token staking, ${tex`\lambda_{GG}`}:
 \lambda_{GG} = \frac{1 - A_Q}{1 + \left( \frac{G_i}{G_G} \right)^2} \tag{27}
 ```
 
-<p class="u-center">Figure 18: G Stake Allocation (assuming
+```js
+function computeLambda(AQ, Gi) {
+  return (1 - AQ) / (1 + (Gi / (1 - Gi))**2);
+}
+```
+
+<p class="u-center">Figure 18: ${tex`G`} Stake Allocation (assuming
 ${tex`G_G = 1 − G_i`})
 
-![G Stake Allocation (assuming G_G = 1 − Gᵢ)](toy-model/g_stake_alloc.png)
+```js
+const lambdaData = [];
+for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
+  for (let paramAi = 0; paramAi <= 1; paramAi += 0.1) {
+    lambdaData.push({
+      key: "λ",
+      ai: paramAi,
+      gi: paramGi,
+      value: computeLambda(paramAi, paramGi),
+    })
+  }
+}
+```
+
+```js
+Plot.plot({
+  caption: html`Heatmap of ${tex`\lambda_{GG}`} with ${tex`G_G = 1 - G_i`}`,
+  color: {
+    legend: true,
+    scheme: "Spectral",
+    domain: [0, 1],
+    type: "sequential",
+    label: "λ",
+  },
+  x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
+  y: { ticks: d3.range(0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
+  marks: [
+    Plot.frame(),
+    Plot.rect(lambdaData, {
+      x1: d => d.ai - 0.05,
+      x2: d => d.ai + 0.05,
+      y1: d => d.gi - 0.05,
+      y2: d => d.gi + 0.05,
+      fill: "value",
+    }),
+    Plot.text(lambdaData, {
+      x: "ai",
+      y: "gi",
+      text: d => Number.isNaN(d.value) ? "" : d.value.toLocaleString(
+        "en-GB",
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+      ),
+      fill: d => contrastingTextColor(
+        d3.scaleSequential([0, 1], d3.interpolateSpectral)(d.value),
+      ),
+    })
+  ],
+})
+```
 
 Noting the relationship between ${tex`G`} and ${tex`\beta`}, and particularly if
 ${tex`G = 0`}, ${tex`\beta = 0`}.
