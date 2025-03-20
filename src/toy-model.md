@@ -1541,7 +1541,7 @@ function computeSpread(Ai, Gi, deltaCinitial) {
 Figure 12 below shows the spread captured on a 'round trip' by the system
 where ${tex`\varepsilon`} is the proportion retained:
 
-<p class="u-center">Figure 12: Carbon 'Spread'
+<p class="u-center">Figure 12: Carbon ‘Spread’
 
 ```js
 const spreadData = [];
@@ -1618,9 +1618,9 @@ const inputDeltaCinitial = view(Inputs.range([0.001, 1], {
 Figure 13 shows the component spread parts on a Carbon sale and purchase
 converging to 1 (no spread) as ${tex`A_i`} and ${tex`G_i`} tend to 100%.
 
-<p class="u-center">Figure 13: Carbon 'Spread' Components
+<p class="u-center">Figure 13: Carbon ‘Spread’ Components
 
-![Carbon 'Spread' Components](toy-model/carbon_spread_components.png)
+![Carbon ‘Spread’ Components](toy-model/carbon_spread_components.png)
 
 ## 7 Liquidity
 
