@@ -5,12 +5,33 @@ figcaption {
   text-align: center;
 }
 
-input {
-  width: 160px!important;
+form {
+  flex-wrap: wrap !important;
+  width: initial !important;
+  max-width: 640px !important;
 }
 
-label {
-  width: 240px!important;
+form > label, form > div {
+  flex: 1 !important;
+  width: initial !important;
+  max-width: 100% !important;
+}
+
+input {
+  flex: auto !important;
+}
+
+input[type="number"] {
+  width: 120px !important;
+}
+
+.katex-display {
+  overflow: auto hidden;
+}
+
+.katex-display > .katex > .katex-html > .tag {
+  position: relative !important;
+  float: right;
 }
 
 .Copyright {
