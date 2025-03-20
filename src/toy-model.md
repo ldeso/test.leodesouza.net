@@ -1519,7 +1519,7 @@ bonds (Time staking):
 \Delta C_\emptyset = \frac{1}{365} \, \frac{S}{1 - \frac 1 2 (1 - G_\emptyset)^2} \tag{25}
 ```
 
-#### 6.2.3 Liqidation: ${tex`\Delta A = 1`}
+#### 6.2.3 Liquidation: ${tex`\Delta A = 1`}
 
 In the event that 100% of ${tex`A`} tokens are placed into the burn mechanism
 for Carbon offsets, the following occurs:
