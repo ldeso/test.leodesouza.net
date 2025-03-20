@@ -582,7 +582,7 @@ Plot.plot({
 
 ```js
 const inputS = view(Inputs.range([1e-4, 1], {
-  label: tex`S \text{ (total stake)}`,
+  label: tex`S \text{ (share of } A \text{ tokens staked for bonds)}`,
   step: 1e-4,
   value: 0.55,
 }));
@@ -1360,7 +1360,7 @@ Plot.plot({
 
 ```js
 const inputDeltaA = view(Inputs.range([0.001, 0.999], {
-  label: tex`\Delta A \text{ (quantity of } A \text{ tokens burned)}`,
+  label: tex`\Delta A \text{ (quantity of } A \text{ tokens burnt)}`,
   step: 0.001,
   value: 0.1,
 }));
@@ -1389,6 +1389,21 @@ ${tex`\tilde A_\emptyset`} derived from the total liquid Carbon assets
 \tilde A_\emptyset = (1 - A)^2 \tag{22}
 ```
 
+```js
+function computeTildeAnull(A) {
+  return (1 - A)**2;
+}
+```
+
+```js
+const paramTildeAnull = computeTildeAnull(inputA);
+
+const stringTildeAnull = paramTildeAnull.toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 3, maximumFractionDigits: 3 },
+)
+```
+
 With ${tex`K`} classes of Carbon existing in the residual portfolio, noting that
 ${tex`C_{\emptyset 0} = \sum_{k=1}^K C_{k0}`}, with ${tex`G_k`} similarly
 defined, we can determine an average for ${tex`G_\emptyset`}:
@@ -1409,6 +1424,14 @@ Substituting in Equation (20)
 
 ```tex
 \ln(1 + \Delta C_\emptyset) = \frac{\ln(1 - \Delta A)}{\tilde A_\emptyset + \frac 1 2 \tilde A_\emptyset^2 (1 - G_\emptyset)^2} \quad \Delta A \neq 1 \tag{24}
+```
+
+```js
+function computeTrueDeltaCi(Ai, Gi, Anull, Gnull, deltaA) {
+  const trueAi = Ai === 0 ? Anull : Ai;
+  const trueGi = Gi === 0 ? Gnull : Gi;
+  return computeDeltaCi(trueAi, trueGi, deltaA);
+}
 ```
 
 The result ${tex`\Delta C_\emptyset`} is applied to the liquid elements of the
@@ -1516,6 +1539,16 @@ bonds (Time staking):
 
 ```tex
 \Delta C_\emptyset = \frac{1}{365} \, \frac{S}{1 - \frac 1 2 (1 - G_\emptyset)^2} \tag{25}
+```
+
+```js
+function computeDeltaCnull(Ai, A, S, Gnull) {
+  if (Ai === 0 && A === 1) {
+    return S / (365 * (1 - (1 - Gnull)**2 / 2));
+  } else {
+    return 0;
+  }
+}
 ```
 
 #### 6.2.3 Liquidation: ${tex`\Delta A = 1`}
@@ -1629,40 +1662,127 @@ converging to 1 (no spread) as ${tex`A_i`} and ${tex`G_i`} tend to 100%.
 
 #### 6.3.2 Carbon Sold by the AMM while Burning A Tokens
 
+We calculate the number of tonnes of carbon class ${tex`i`} sold by the AAM in
+exchange for burning a given amount of A tokens under a given configuration.
+
+##### Supply Parameters
+
 ```js
 const inputCi0tonnes = view(Inputs.range([1e5, 1e9], {
-  label: tex`C_{i0}^\text{tCO2eq} \text{ (tonnes of liquid carbon held)}`,
+  label: tex`C_{i0}^\text{tCO2eq} \text{ (liquid tonnes of carbon held)}`,
   step: 1e5,
   value: 1e7,
   transform: Math.log,
 }));
-const inputApri = view(Inputs.range([5e-3, 5e1], {
+const inputAsupply = view(Inputs.range([2e5, 2e9], {
+  label: tex`A \text{ tokens total supply}`,
+  step: 1e5,
+  value: 2e7,
+  transform: Math.log,
+}));
+```
+
+##### Staking Parameters
+
+```js
+const inputAi = view(Inputs.range([0, 1], {
+  label: tex`A_i \text{ (share of } A \text{ stake pricing class } i \text)`,
+  step: 0.001,
+}));
+const inputGi = view(Inputs.range([0, 1], {
+  label: tex`G_i \text{ (share of } G \text{ stake pricing class } i \text)`,
+  step: 0.001,
+}));
+const inputGnull = view(Inputs.range([0, 1], {
+  label: tex`G_\emptyset \text{ (implied } G \text{ stake for unweighted } i \text)`,
+  step: 0.001,
+}));
+const inputA = view(Inputs.range([0, 1], {
+  label: tex`A \text{ (share of } A \text{ tokens staked for pricing)}`,
+  step: 0.001,
+}));
+const inputS_ = view(Inputs.range([0, 1], {
+  label: tex`S \text{ (share of } A \text{ tokens staked for bonds)}`,
+  step: 0.001,
+}));
+```
+
+- ${tex`\tilde A_\emptyset = ${stringTildeAnull}`} (implied ${tex`A`} stake for
+unweighted carbon classes)
+
+##### Transaction Parameters
+
+```js
+const inputAprice = view(Inputs.range([5e-3, 5e1], {
   label: tex`A \text{ token price (USD)}`,
   step: 5e-3,
   value: 5e-1,
   transform: Math.log,
 }));
-const inputAsupply = view(Inputs.range([2e5, 2e9], {
-  label: tex`A \text{ token total supply}`,
-  step: 1e5,
-  value: 2e7,
-  transform: Math.log,
-}));
-const inputAburned = view(Inputs.range([2e-1, 2e5], {
-  label: tex`A \text{ tokens burned}`,
+const inputAburnt = view(Inputs.range([2e-1, 2e5], {
+  label: tex`A \text{ tokens burnt by the AMM}`,
   step: 1e-1,
   value: 2e2,
   transform: Math.log,
 }));
-const inputAi = view(Inputs.range([0, 1], {
-  label: tex`A_i \text{ (} A \text{ stake pricing class } i \text)`,
-  step: 0.001,
-}));
-const inputGi = view(Inputs.range([0, 1], {
-  label: tex`G_i \text{ (} G \text{ stake pricing class } i \text)`,
-  step: 0.001,
-}));
 ```
+
+```js
+const paramDeltaA = inputAburnt / inputAsupply;
+
+const paramDeltaCi = computeTrueDeltaCi(
+  inputAi,
+  inputGi,
+  paramTildeAnull,
+  inputGnull,
+  paramDeltaA,
+);
+
+const paramDeltaCiTonnes = paramDeltaCi * inputCi0tonnes;
+
+const paramDeltaCnull = computeDeltaCnull(inputAi, inputA, inputS_, inputGnull); 
+
+const paramDeltaCiPrice = inputAprice * inputAburnt / -paramDeltaCiTonnes
+
+const stringDeltaA = paramDeltaA.toLocaleString(
+  "en-GB",
+  { style: "percent", minimumFractionDigits: 8, maximumFractionDigits: 8 },
+);
+
+const stringDeltaCi = (-paramDeltaCi).toLocaleString(
+  "en-GB",
+  { style: "percent", minimumFractionDigits: 8, maximumFractionDigits: 8 },
+);
+
+const stringDeltaCiTonnes = (-paramDeltaCiTonnes).toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 6, maximumFractionDigits: 6 },
+);
+
+const stringDeltaCnull = paramDeltaCnull.toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 6, maximumFractionDigits: 6 },
+);
+
+const stringDeltaCiPrice = paramDeltaCiPrice.toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 9, maximumFractionDigits: 9 },
+);
+```
+
+- ${tex`\Delta A = ${stringDeltaA}`}${tex`\, \%`} (share of ${tex`A`} tokens
+burnt by the AAM)
+
+- ${tex`-\Delta C_i = ${stringDeltaCi}`}${tex`\, \%`} (share of liquid
+carbon class ${tex`i`} sold by the AAM)
+
+- ${tex`\Delta C_\emptyset = ${stringDeltaCnull}`}${tex`\, \%`} (daily
+yield of class ${tex`i`} issued to bond holders)
+
+- ${tex`-\Delta C_i^\text{tCO2eq} = ${stringDeltaCiTonnes}`} tonnes of
+carbon class ${tex`i`} sold by the AAM
+
+- Carbon class `i` is priced at \$${stringDeltaCiPrice}/tCO2eq
 
 ## 7 Liquidity
 
