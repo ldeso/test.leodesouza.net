@@ -1621,6 +1621,49 @@ converging to 1 (no spread) as ${tex`A_i`} and ${tex`G_i`} tend to 100%.
 
 ![Carbon ‘Spread’ Components](toy-model/carbon_spread_components.png)
 
+### 6.3 Interactive Model
+
+#### 6.3.1 A Tokens Created by the AMM while Purchasing Carbon
+
+
+
+#### 6.3.2 Carbon Sold by the AMM while Burning A Tokens
+
+```js
+const inputCi0tonnes = view(Inputs.range([1e5, 1e9], {
+  label: tex`C_{i0}^\text{tCO2eq} \text{ (tonnes of liquid carbon held)}`,
+  step: 1e5,
+  value: 1e7,
+  transform: Math.log,
+}));
+const inputApri = view(Inputs.range([5e-3, 5e1], {
+  label: tex`A \text{ token price (USD)}`,
+  step: 5e-3,
+  value: 5e-1,
+  transform: Math.log,
+}));
+const inputAsupply = view(Inputs.range([2e5, 2e9], {
+  label: tex`A \text{ token total supply}`,
+  step: 1e5,
+  value: 2e7,
+  transform: Math.log,
+}));
+const inputAburned = view(Inputs.range([2e-1, 2e5], {
+  label: tex`A \text{ tokens burned}`,
+  step: 1e-1,
+  value: 2e2,
+  transform: Math.log,
+}));
+const inputAi = view(Inputs.range([0, 1], {
+  label: tex`A_i \text{ (} A \text{ stake pricing class } i \text)`,
+  step: 0.001,
+}));
+const inputGi = view(Inputs.range([0, 1], {
+  label: tex`G_i \text{ (} G \text{ stake pricing class } i \text)`,
+  step: 0.001,
+}));
+```
+
 ## 7 Liquidity
 
 Both ${tex`A`} and ${tex`G`} tokens can be used independently of price (and
