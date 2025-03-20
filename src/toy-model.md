@@ -826,14 +826,14 @@ be sold with a specific maturity index ${tex`t`}.
 ```js
 const paramMaturityIdx = 4 * inputEt;
 
-function computeDeltaCi0(inputDeltaCi, t) {
-  return paramMaturityIdx === 0 ? inputDeltaCi : 0;
+function computeDeltaCi0(deltaCi, t) {
+  return paramMaturityIdx === 0 ? deltaCi : 0;
 }
 
-function computeVecDeltaCi(inputDeltaCi, t) {
+function computeVecDeltaCi(deltaCi, t) {
   const vecDeltaCi = Array(40).fill(0);
   if (t !== 0) {
-    vecDeltaCi[t - 1] = inputDeltaCi;
+    vecDeltaCi[t - 1] = deltaCi;
   }
   return vecDeltaCi;
 }
@@ -1530,12 +1530,90 @@ pro-rata to ${tex`A`} contribution
 - A new set of nominal ${tex`A`} tokens are issued to locked ${tex`G`} token
 holders on a pro-rata basis
 
+```js
+function computeSpread(Ai, Gi, deltaCinitial) {
+  const deltaA = computeDeltaA(Ai, Gi, deltaCinitial)
+  const deltaCfinal = -computeDeltaCi(Ai, Gi, deltaA)
+  return (deltaCinitial - deltaCfinal) / deltaCinitial;
+}
+```
+
 Figure 12 below shows the spread captured on a 'round trip' by the system
-where ϵ is the proportion retained:
+where ${tex`\varepsilon`} is the proportion retained:
 
 <p class="u-center">Figure 12: Carbon 'Spread'
 
-![Carbon 'Spread'](toy-model/carbon_spread.png)
+```js
+const spreadData = [];
+for (let paramGi = 0; paramGi <= 1; paramGi += 0.1) {
+      spreadData.push({
+        key: "spread",
+        ai: 0,
+        gi: paramGi,
+        value: NaN,
+      })
+    for (let paramAi = 0.1; paramAi <= 1; paramAi += 0.1) {
+        spreadData.push({
+          key: "spread",
+          ai: paramAi,
+          gi: paramGi,
+          value: computeSpread(paramAi, paramGi, inputDeltaCinitial),
+        })
+    }
+}
+const getSpread = d => d.key === "spread" ? d.value : NaN;
+```
+
+```js
+Plot.plot({
+  caption: html`Heatmap of Carbon Spread ${tex`\varepsilon`} with initial
+          ${tex`\Delta C = ${(100 * inputDeltaCinitial).toLocaleString(
+            "en-GB",
+            { minimumFractionDigits: 1, maximumFractionDigits: 1 },
+          )} \, \%`}`,
+  color: {
+    legend: true,
+    scheme: "Spectral",
+    domain: [0, computeSpread(1, 0, 1)],
+    type: "sequential",
+    label: "Carbon Spread ε",
+  },
+  x: { ticks: d3.range(0, 1.01, 0.1), label: "Aᵢ" },
+  y: { ticks: d3.range(0, 1.01, 0.1), domain: [1.05, -0.05], label: "Gᵢ" },
+  marks: [
+    Plot.frame(),
+    Plot.rect(spreadData, {
+        x1: d => d.ai - 0.05,
+        x2: d => d.ai + 0.05,
+        y1: d => d.gi - 0.05,
+        y2: d => d.gi + 0.05,
+        fill: getSpread,
+    }),
+    Plot.text(spreadData, {
+      x: "ai",
+      y: "gi",
+      text: d => Number.isNaN(getSpread(d)) ? "" : d.value.toLocaleString(
+        "en-GB",
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+      ),
+      fill: d => contrastingTextColor(
+        d3.scaleSequential(
+          [0, computeSpread(1, 0, inputDeltaA)],
+          d3.interpolateSpectral,
+        )(d.value),
+      ),
+    })
+  ],
+})
+```
+
+```js
+const inputDeltaCinitial = view(Inputs.range([0.001, 1], {
+  label: tex`\Delta C \text{ (initial carbon sale)}`,
+  step: 0.001,
+  value: 0.1,
+}));
+```
 
 Figure 13 shows the component spread parts on a Carbon sale and purchase
 converging to 1 (no spread) as ${tex`A_i`} and ${tex`G_i`} tend to 100%.
