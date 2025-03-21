@@ -1429,7 +1429,7 @@ Substituting in Equation (20)
 ```js
 function computeTrueDeltaCi(Ai, Gi, Anull, Gnull, deltaA) {
   const trueAi = Ai === 0 ? Anull : Ai;
-  const trueGi = Gi === 0 ? Gnull : Gi;
+  const trueGi = Ai === 0 ? Gnull : Gi;
   return computeDeltaCi(trueAi, trueGi, deltaA);
 }
 ```
@@ -1662,8 +1662,9 @@ converging to 1 (no spread) as ${tex`A_i`} and ${tex`G_i`} tend to 100%.
 
 #### 6.3.2 Carbon Sold by the AMM while Burning A Tokens
 
-We calculate the number of tonnes of carbon class ${tex`i`} sold by the AAM in
-exchange for burning a given amount of A tokens under a given configuration.
+We calculate the price of carbon based on the number of tonnes of carbon class
+${tex`i`} sold by the AAM in exchange for burning a given amount of A tokens
+with the following parameters.
 
 ##### Supply Parameters
 
