@@ -26,7 +26,7 @@ input[type="number"] {
 }
 
 .katex-display {
-  overflow-x: auto;
+  overflow: auto hidden;
   padding: 6px 0;
 }
 
