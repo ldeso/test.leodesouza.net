@@ -1395,15 +1395,6 @@ function computeTildeAnull(A) {
 }
 ```
 
-```js
-const paramTildeAnull = computeTildeAnull(inputA);
-
-const stringTildeAnull = paramTildeAnull.toLocaleString(
-  "en-GB",
-  { minimumFractionDigits: 3, maximumFractionDigits: 3 },
-)
-```
-
 With ${tex`K`} classes of Carbon existing in the residual portfolio, noting that
 ${tex`C_{\emptyset 0} = \sum_{k=1}^K C_{k0}`}, with ${tex`G_k`} similarly
 defined, we can determine an average for ${tex`G_\emptyset`}:
@@ -1656,134 +1647,303 @@ converging to 1 (no spread) as ${tex`A_i`} and ${tex`G_i`} tend to 100%.
 
 ### 6.3 Interactive Model
 
-#### 6.3.1 A Tokens Created by the AMM while Purchasing Carbon
+#### 6.3.1 A Tokens Created by the AMM While Purchasing Carbon
 
+The price of carbon is calculated by dividing the number of liquid tonnes of
+carbon class ${tex`i`} purchased by the AAM by the number of emitted A tokens.
 
-
-#### 6.3.2 Carbon Sold by the AMM while Burning A Tokens
-
-We calculate the price of carbon based on the number of tonnes of carbon class
-${tex`i`} sold by the AAM in exchange for burning a given amount of A tokens
-with the following parameters.
-
-##### Supply Parameters
+|                     | ${tex`A`} Tokens | Carbon                           |
+| ------------------- | ----------------:| --------------------------------:|
+| **Absolute Change** |                  | ${stringDeltaBarCiTonnes} tCO2eq |
+| **Relative Change** |                  |                                  |
+| **Price**           |                  |                                  |
 
 ```js
-const inputCi0tonnes = view(Inputs.range([1e5, 1e9], {
-  label: tex`C_{i0}^\text{tCO2eq} \text{ (liquid tonnes of carbon held)}`,
-  step: 1e5,
-  value: 1e7,
-  transform: Math.log,
-}));
-const inputAsupply = view(Inputs.range([2e5, 2e9], {
-  label: tex`A \text{ tokens total supply}`,
-  step: 1e5,
-  value: 2e7,
-  transform: Math.log,
-}));
+function setInput(input, value) {
+  input.value = value;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
 ```
 
-##### Staking Parameters
+```js
+const inputResetView = Inputs.button(
+  [["Reset", () => {
+    setInput(inputDeltaBarCiTonnesView, defaultDeltaBarCiTonnes);
+    setInput(inputAPriceView, defaultAPrice);
+    setInput(inputASupplyView, defaultASupply);
+    setInput(inputAiView, defaultAi);
+    setInput(inputGiView, defaultGi);
+  }]],
+);
+```
 
 ```js
-const inputAi = view(Inputs.range([0, 1], {
+const defaultDeltaBarCiTonnes = 1e2;
+const defaultAPrice = 5e-1;
+const defaultASupply = 2e7;
+const defaultAi = 0.5;
+const defaultGi = 0.5;
+
+const inputDeltaBarCiTonnesView = Inputs.range([1e-1, 1e5], {
+  label: tex`\text{Present-value tonnes bought by the AMM}`,
+  step: 1e-1,
+  value: defaultDeltaBarCiTonnes,
+  transform: Math.log,
+});
+const inputAPriceView = Inputs.range([5e-3, 5e1], {
+  label: tex`A \text{ token USD price}`,
+  step: 5e-3,
+  value: defaultAPrice,
+  transform: Math.log,
+});
+const inputASupplyView = Inputs.range([2e5, 2e9], {
+  label: tex`\text{Total supply of } A \text{ tokens}`,
+  step: 1e5,
+  value: defaultASupply,
+  transform: Math.log,
+});
+const inputAiView = Inputs.range([0, 1], {
   label: tex`A_i \text{ (share of } A \text{ stake pricing class } i \text)`,
   step: 0.001,
-}));
-const inputGi = view(Inputs.range([0, 1], {
+  value: defaultAi,
+});
+const inputGiView = Inputs.range([0, 1], {
   label: tex`G_i \text{ (share of } G \text{ stake pricing class } i \text)`,
   step: 0.001,
-}));
-const inputGnull = view(Inputs.range([0, 1], {
-  label: tex`G_\emptyset \text{ (implied } G \text{ stake for unweighted } i \text)`,
-  step: 0.001,
-}));
-const inputA = view(Inputs.range([0, 1], {
-  label: tex`A \text{ (share of } A \text{ tokens staked for pricing)}`,
-  step: 0.001,
-}));
-const inputS_ = view(Inputs.range([0, 1], {
-  label: tex`S \text{ (share of } A \text{ tokens staked for bonds)}`,
-  step: 0.001,
-}));
+  value: defaultGi,
+});
 ```
 
-- ${tex`\tilde A_\emptyset = ${stringTildeAnull}`} (implied ${tex`A`} stake for
-unweighted carbon classes)
-
-##### Transaction Parameters
+```js
+const inputReset = view(inputResetView);
+const inputDeltaBarCiTonnes = view(inputDeltaBarCiTonnesView);
+const inputAPrice = view(inputAPriceView);
+const inputASupply = view(inputASupplyView);
+const inputAi = view(inputAiView);
+const inputGi = view(inputGiView);
+```
 
 ```js
-const inputAprice = view(Inputs.range([5e-3, 5e1], {
-  label: tex`A \text{ token price (USD)}`,
-  step: 5e-3,
-  value: 5e-1,
-  transform: Math.log,
-}));
-const inputAburnt = view(Inputs.range([2e-1, 2e5], {
+if (inputDeltaBarCiTonnes === defaultDeltaBarCiTonnes &&
+            inputAPrice === defaultAPrice && inputASupply === defaultASupply &&
+            inputAi === defaultAi && inputGi === defaultGi) {
+  inputResetView.classList.add("u-hidden")
+} else {
+  inputResetView.classList.remove("u-hidden")
+}
+```
+
+```js
+const stringDeltaBarCiTonnes = inputDeltaBarCiTonnes.toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+);
+```
+
+#### 6.3.2 Carbon Sold by the AMM While Burning A Tokens
+
+The price of carbon is calculated by dividing the number of tonnes of carbon
+class ${tex`i`} sold by the AAM by the number of burnt A tokens.
+
+|                     | ${tex`A`} Tokens | Carbon                        |
+| ------------------- | ----------------:| -----------------------------:|
+| **Absolute Change** | ${stringABurnt}  | ${stringDeltaCiTonnes} tCO2eq |
+| **Relative Change** | ${stringDeltaA}  | ${stringDeltaCi}              |
+| **Price**           | $${stringAPrice} | $${stringDeltaCiPrice}        |
+
+```js
+const inputResetView_ = Inputs.button(
+  [["Reset", () => {
+    setInput(inputABurntView, defaultABurnt);
+    setInput(inputAPriceView, defaultAPrice);
+    setInput(inputASupplyView, defaultASupply);
+    setInput(inputCi0TonnesView, defaultCi0Tonnes);
+    setInput(inputAiView, defaultAi);
+    setInput(inputGiView, defaultGi);
+    setInput(inputAView, defaultA);
+    setInput(inputSView, defaultS);
+  }]],
+);
+```
+
+```js
+const defaultABurnt = 2e2;
+const defaultCi0Tonnes = 1e7;
+const defaultA = 0.5;
+const defaultS = 0.5;
+
+const inputABurntView = Inputs.range([2e-1, 2e5], {
   label: tex`A \text{ tokens burnt by the AMM}`,
   step: 1e-1,
-  value: 2e2,
+  value: defaultABurnt,
   transform: Math.log,
-}));
+});
+const inputAPriceView_ = Inputs.range([5e-3, 5e1], {
+  label: tex`A \text{ token USD price}`,
+  step: 5e-3,
+  value: defaultAPrice,
+  transform: Math.log,
+});
+const inputASupplyView_ = Inputs.range([2e5, 2e9], {
+  label: tex`\text{Total supply of } A \text{ tokens}`,
+  step: 1e5,
+  value: defaultASupply,
+  transform: Math.log,
+});
+const inputCi0TonnesView = Inputs.range([1e5, 1e9], {
+  label: tex`\text{Liquid tonnes of class } i \text{ in AMM}`,
+  step: 1e5,
+  value: defaultCi0Tonnes,
+  transform: Math.log,
+});
+const inputAiView_ = Inputs.range([0, 1], {
+  label: tex`A_i \text{ (share of } A \text{ stake pricing class } i \text)`,
+  step: 0.001,
+  value: defaultAi,
+});
+const inputGiView_ = Inputs.range([0, 1], {
+  label: tex`G_i \text{ (share of } G \text{ stake pricing class } i \text)`,
+  step: 0.001,
+  value: defaultGi,
+});
+const inputGnullView = Inputs.range([0, 1], {
+  label: tex`G_\emptyset \text{ (implied } G \text{ stake pricing class } i \text)`,
+  step: 0.001,
+});
+const inputUnweighedView = Inputs.button(
+  [["Unweighed Carbon Class", () => setInput(inputAiView, 0)]],
+);
+const inputAView = Inputs.range([0, 1], {
+  label: tex`A \text{ (share of } A \text{ tokens staked for pricing)}`,
+  step: 0.001,
+  value: defaultA,
+});
+const inputSView = Inputs.range([0, 1], {
+  label: tex`S \text{ (share of } A \text{ tokens staked for bonds)}`,
+  step: 0.001,
+  value: defaultS,
+});
 ```
 
 ```js
-const paramDeltaA = inputAburnt / inputAsupply;
+const inputReset = view(inputResetView_);
+const inputABurnt = view(inputABurntView);
+display(Inputs.bind(inputAPriceView_, inputAPriceView));
+display(Inputs.bind(inputASupplyView_, inputASupplyView));
+const inputCi0Tonnes = view(inputCi0TonnesView);
+display(Inputs.bind(inputAiView_, inputAiView));
+display(Inputs.bind(inputGiView_, inputGiView));
+display(Inputs.bind(inputGnullView, inputGiView));
+const inputS_ = view(inputSView);
+const inputUnweighed = view(inputUnweighedView);
+const inputA = view(inputAView);
+```
+
+${html`<span class="inputs ${inputAi !== 0 || inputA === 1 ? "u-removed" : ""}">${tex`\tilde A_\emptyset = ${stringTildeAnull} \text{ (implied } A \text{ stake pricing class } i \text)`}</span>`}
+
+${html`<span class="inputs ${inputAi !== 0 || inputA !== 1 ? "u-removed" : ""}">Until
+the carbon is sold, the AAM issues ~${stringDeltaCnullTonnes} tCO2eq of class
+${tex`i`} as a liquid daily yield to all bond holders.</span>`}
+
+```js
+if (inputABurnt === defaultABurnt && inputAPrice === defaultAPrice &&
+            inputASupply === defaultASupply &&
+            inputCi0Tonnes === defaultCi0Tonnes && inputAi === defaultAi &&
+            inputGi === defaultGi && inputS_ === defaultS &&
+            inputA === defaultA) {
+  inputResetView_.classList.add("u-hidden")
+} else {
+  inputResetView_.classList.remove("u-hidden")
+}
+if (inputAi === 0) {
+  inputGiView.classList.add("u-removed");
+  inputUnweighedView.classList.add("u-removed");
+  if (inputA === 1) {
+    inputGnullView.classList.add("u-removed");
+    inputSView.classList.remove("u-removed");
+  } else {
+    inputGnullView.classList.remove("u-removed");
+    inputSView.classList.add("u-removed");
+  }
+  inputAView.classList.remove("u-removed");
+} else {
+  inputGiView.classList.remove("u-removed");
+  inputUnweighedView.classList.remove("u-removed");
+  inputGnullView.classList.add("u-removed");
+  inputSView.classList.add("u-removed");
+  inputAView.classList.add("u-removed");
+}
+```
+
+```js
+const paramTildeAnull = computeTildeAnull(inputA);
+
+const paramDeltaA = inputABurnt / inputASupply;
 
 const paramDeltaCi = computeTrueDeltaCi(
   inputAi,
   inputGi,
   paramTildeAnull,
-  inputGnull,
+  inputGi,
   paramDeltaA,
 );
 
-const paramDeltaCiTonnes = paramDeltaCi * inputCi0tonnes;
+const paramDeltaCiTonnes = paramDeltaCi * inputCi0Tonnes;
 
-const paramDeltaCnull = computeDeltaCnull(inputAi, inputA, inputS_, inputGnull); 
+const paramDeltaCnull = computeDeltaCnull(inputAi, inputA, inputS_, inputGi); 
 
-const paramDeltaCiPrice = inputAprice * inputAburnt / -paramDeltaCiTonnes
+const paramDeltaCnullTonnes = paramDeltaCnull * inputCi0Tonnes;
+
+const paramDeltaCiPrice = inputAPrice * inputABurnt / -paramDeltaCiTonnes
+
+const stringABurnt = inputABurnt.toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+);
+
+const stringAPrice = inputAPrice.toLocaleString(
+  "en-GB",
+  { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+);
+
+const stringTildeAnull = paramTildeAnull.toLocaleString(
+  "en-GB",
+  { minimumSignificantDigits: 3, maximumSignificantDigits: 3 },
+)
 
 const stringDeltaA = paramDeltaA.toLocaleString(
   "en-GB",
-  { style: "percent", minimumFractionDigits: 8, maximumFractionDigits: 8 },
+  {
+    style: "percent",
+    minimumSignificantDigits: 3,
+    maximumSignificantDigits: 3,
+  },
 );
 
 const stringDeltaCi = (-paramDeltaCi).toLocaleString(
   "en-GB",
-  { style: "percent", minimumFractionDigits: 8, maximumFractionDigits: 8 },
+  {
+    style: "percent",
+    minimumSignificantDigits: 3,
+    maximumSignificantDigits: 3,
+  },
 );
 
 const stringDeltaCiTonnes = (-paramDeltaCiTonnes).toLocaleString(
   "en-GB",
-  { minimumFractionDigits: 6, maximumFractionDigits: 6 },
+  { minimumSignificantDigits: 3, maximumSignificantDigits: 3 },
 );
 
-const stringDeltaCnull = paramDeltaCnull.toLocaleString(
+const stringDeltaCnullTonnes = paramDeltaCnullTonnes.toLocaleString(
   "en-GB",
-  { minimumFractionDigits: 6, maximumFractionDigits: 6 },
+  { minimumSignificantDigits: 3, maximumSignificantDigits: 3 },
 );
 
 const stringDeltaCiPrice = paramDeltaCiPrice.toLocaleString(
   "en-GB",
-  { minimumFractionDigits: 9, maximumFractionDigits: 9 },
+  { minimumSignificantDigits: 3, maximumSignificantDigits: 3 },
 );
 ```
-
-- ${tex`\Delta A = ${stringDeltaA}`}${tex`\, \%`} (share of ${tex`A`} tokens
-burnt by the AAM)
-
-- ${tex`-\Delta C_i = ${stringDeltaCi}`}${tex`\, \%`} (share of liquid
-carbon class ${tex`i`} sold by the AAM)
-
-- ${tex`\Delta C_\emptyset = ${stringDeltaCnull}`}${tex`\, \%`} (daily
-yield of class ${tex`i`} issued to bond holders)
-
-- ${tex`-\Delta C_i^\text{tCO2eq} = ${stringDeltaCiTonnes}`} tonnes of
-carbon class ${tex`i`} sold by the AAM
-
-- Carbon class `i` is priced at \$${stringDeltaCiPrice}/tCO2eq
 
 ## 7 Liquidity
 
